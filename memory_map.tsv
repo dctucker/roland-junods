@@ -1,0 +1,575 @@
+﻿oa	ob	oc	od	sep	name a	name b	name c	name d	name e	name f	name g	sep	min	max	desc
+01	00	00	00		setup						
+		00	00			sound_mode						0	4	patch,perform,gm1,gm2,gs
+		00	00			performance					
+			01				bank_msb				
+			02				bank_lsb				
+			03				pc				
+		00				kbd_patch					
+			04				bank_msb				
+			05				bank_lsb				
+			06				pc				
+		00				rhy_patch					
+			07				bank_msb				
+			08				bank_lsb				
+			09				pc				
+			0a			mfx1							0	1
+			0b			mfx2							0	1
+			0c			mfx3							0	1
+			0d			chorus							0	1
+			0e			reverb							0	1
+			0f			reserved_1						
+			10			reserved_2						
+			11			reserved_3						
+			12			transpose							59	70	-5 .. +6
+			13			octave							61	67	-3 .. +3
+			14			reserved_4						
+			15			knob_select							0	2
+			16			reserved_5						
+			17			arp_grid							0	8	04_, 08_, 08L, 08H, 08t, 16_, 16L, 16H, 16t
+			18			arp_duration							0	9	30, 40, 50, 60, 70, 80, 90, 100, 120, FUL
+			19			arp_switch							0	1
+			1a			reserved_6						
+			1b			arp_style						
+			1c			arp_motif							0	11	UP/L, UP/H, UP/_, dn/L, dn/H, dn/_, Ud/L, Ud/H, Ud/_, rn/L
+			1d			arp_octave							61	67	-3 .. +3
+			1e			arp_hold							0	1
+			1f			arp_accent							0	100
+			20			arp_velocity						
+			21			rhythm_switch							0	1
+			22			reserved_7						
+			23			rhythm_style							0	255	1 .. 256; MSB first nibble, LSB second nibble
+			25			reserved_8						
+			26			rhythm_group							0	29
+			27			rhythm_accent							0	100
+			28			rhythm_velocity						
+			29			reserved_9						
+			33			arp_step							0	32	AUTO, 1 .. 32
+02	00	00	00		system						
+	00	00	00			common					
+		00	00				master				
+			00					tune					24	2024	-100.0 .. +100.0 cents; four nibbles
+			04					key_shift					40	88	-24 .. +24
+			05					level			
+			06				scale_tune						0	1
+			07				patch_remain						0	1
+			08				parallel						0	1
+			09				channel						0	16	1 .. 16, OFF
+			0a				kbd_patch_channel						0	15	1 .. 16
+			0b				reserved_1				
+		00	0c				scale				
+			0c					c					0	127	-64 .. +63
+			0d					c#					0	127	-64 .. +63
+			0e					d					0	127	-64 .. +63
+			0f					d#					0	127	-64 .. +63
+			10					e					0	127	-64 .. +63
+			11					f					0	127	-64 .. +63
+			12					f#					0	127	-64 .. +63
+			13					g					0	127	-64 .. +63
+			14					g#					0	127	-64 .. +63
+			15					a					0	127	-64 .. +63
+			16					a#					0	127	-64 .. +63
+			17					b					0	127	-64 .. +63
+			18				control				
+			18					1					0	97	OFF, CC01 .. CC31, CC33 .. CC95
+			19					2					0	97	OFF, CC01 .. CC31, CC33 .. CC95
+			1a					3					0	97	OFF, CC01 .. CC31, CC33 .. CC95
+			1b					4					0	97	OFF, CC01 .. CC31, CC33 .. CC95
+			1c				rx_pc						0	1
+			1d				rx_bank						0	1
+	00	40	00			controller					
+			00				tx_pc						0	1
+			01				tx_bank						0	1
+			02				velocity						0	127	REAL, 1 .. 127
+			03				velocity_curve						1	3	LIGHT, MEDIUM, HEAVY
+			04				reserved_1				
+			05				hold_polarity						0	1	STANDARD, REVERSE
+			06				hold_continuous						0	1
+			07				control_pedal				
+			07					assign					0	24	MODULATION, PORTA-TIME, VOLUME, PAN, EXPRESSION, HOLD, PORTAMENTO, SOSTENUTO, RESONANCE, RELEASE-TIME, ATTACK-TIME, CUTOFF, DECAY-TIME, VIB-RATE, VIB-DEPTH, VIB-DELAY, CHO-SEND-LEVEL, REV-SEND-LEVEL, AFTERTOUCH, START/STOP, TAP-TEMPO, PROG-UP, PROG-DOWN, FAV-UP, FAV-DOWN
+			08					polarity					0	1	STANDARD, REVERSE
+			09				reserved_2				
+			10				knob				
+			10					1					0	1	OFF, CC01 - CC31, OFF, CC33 - CC95, BEND, AFT, EQ-LOW-FREQ, EQ-LOW-GAIN, EQ-MID-FREQ, EQ-MID-GAIN, EQ-MID-Q, EQ-HIGH-FREQ, EQ-HIGH-GAIN
+			11					2					0	1	OFF, CC01 - CC31, OFF, CC33 - CC95, BEND, AFT, EQ-LOW-FREQ, EQ-LOW-GAIN, EQ-MID-FREQ, EQ-MID-GAIN, EQ-MID-Q, EQ-HIGH-FREQ, EQ-HIGH-GAIN
+			12					3					0	1	OFF, CC01 - CC31, OFF, CC33 - CC95, BEND, AFT, EQ-LOW-FREQ, EQ-LOW-GAIN, EQ-MID-FREQ, EQ-MID-GAIN, EQ-MID-Q, EQ-HIGH-FREQ, EQ-HIGH-GAIN
+			13					4					0	1	OFF, CC01 - CC31, OFF, CC33 - CC95, BEND, AFT, EQ-LOW-FREQ, EQ-LOW-GAIN, EQ-MID-FREQ, EQ-MID-GAIN, EQ-MID-Q, EQ-HIGH-FREQ, EQ-HIGH-GAIN
+			14				reserved_2				
+			4d				reserved_3				
+10	00	00	00		temporary	performance_mode	pattern				
+		00	00					common			
+			00						performance_name				32	127	ASCII char[12]
+			0c						solo				0	16	OFF, 1 - 16
+			0d						mfx1_channel				0	16	1 .. 16, OFF
+			0e						reserved_1		
+			0f						reserved_2		
+			10						voice_reserve		
+			10							1			0	64	0 .. 63, FULL
+			11							2			0	64	0 .. 63, FULL
+			12							3			0	64	0 .. 63, FULL
+			13							4			0	64	0 .. 63, FULL
+			14							5			0	64	0 .. 63, FULL
+			15							6			0	64	0 .. 63, FULL
+			16							7			0	64	0 .. 63, FULL
+			17							8			0	64	0 .. 63, FULL
+			18							9			0	64	0 .. 63, FULL
+			19							10			0	64	0 .. 63, FULL
+			1a							11			0	64	0 .. 63, FULL
+			1b							12			0	64	0 .. 63, FULL
+			1c							13			0	64	0 .. 63, FULL
+			1d							14			0	64	0 .. 63, FULL
+			1e							15			0	64	0 .. 63, FULL
+			1f							16			0	64	0 .. 63, FULL
+			20						reserved_3		
+			30						mfx1_source				0	16	PERFORM, 1 .. 16
+			31						mfx2_source				0	16	PERFORM, 1 .. 16
+			32						mfx3_source				0	16	PERFORM, 1 .. 16
+			33						chorus				0	16	PERFORM, 1 .. 16
+			34						reverb				0	16	PERFORM, 1 .. 16
+			35						mfx2_channel				0	16	1 .. 16, OFF
+			36						mfx3_channel				0	16	1 .. 16, OFF
+			37						mfx_structure				0	15	1 .. 16
+		02	00					mfx1			
+			00						type				0	80
+			01						dry_send		
+			02						chorus_send		
+			03						reverb_send		
+			04						output_assign				0	3	A, ___, ___, ___
+			05						control
+			05							1	source		0	101	OFF, CC01 .. CC31, CC33 .. CC95, BEND, AFT, SYS1 .. SYS4
+			06							1	sens		1	127	-63 .. +63
+			07							2	source		0	101	OFF, CC01 .. CC31, CC33 .. CC95, BEND, AFT, SYS1 .. SYS4
+			08							2	sens		1	127	-63 .. +63
+			09							3	source		0	101	OFF, CC01 .. CC31, CC33 .. CC95, BEND, AFT, SYS1 .. SYS4
+			0a							3	sens		1	127	-63 .. +63
+			0b							4	source		0	101	OFF, CC01 .. CC31, CC33 .. CC95, BEND, AFT, SYS1 .. SYS4
+			0c							4	sens		1	127	-63 .. +63
+			0d						control_assign		
+			0d							1			0	16	OFF, 1 .. 16
+			0e							2			0	16	OFF, 1 .. 16
+			0f							3			0	16	OFF, 1 .. 16
+			10							4			0	16	OFF, 1 .. 16
+			11						parameter		
+			11							1			12768	52768	-20,000 .. +20,000  four nibbles
+			15							2			12768	52768	-20,000 .. +20,000
+			19							3			12768	52768	-20,000 .. +20,000
+			1d							4			12768	52768	-20,000 .. +20,000
+			21							5			12768	52768	-20,000 .. +20,000
+			25							6			12768	52768	-20,000 .. +20,000
+			29							7			12768	52768	-20,000 .. +20,000
+			2d							8			12768	52768	-20,000 .. +20,000
+			31							9			12768	52768	-20,000 .. +20,000
+			35							10			12768	52768	-20,000 .. +20,000
+			39							11			12768	52768	-20,000 .. +20,000
+			3d							12			12768	52768	-20,000 .. +20,000
+			41							13			12768	52768	-20,000 .. +20,000
+			45							14			12768	52768	-20,000 .. +20,000
+			49							15			12768	52768	-20,000 .. +20,000
+			4d							16			12768	52768	-20,000 .. +20,000
+			51							17			12768	52768	-20,000 .. +20,000
+			55							18			12768	52768	-20,000 .. +20,000
+			59							19			12768	52768	-20,000 .. +20,000
+			5d							20			12768	52768	-20,000 .. +20,000
+			61							21			12768	52768	-20,000 .. +20,000
+			65							22			12768	52768	-20,000 .. +20,000
+			69							23			12768	52768	-20,000 .. +20,000
+			6d							24			12768	52768	-20,000 .. +20,000
+			71							25			12768	52768	-20,000 .. +20,000
+			75							26			12768	52768	-20,000 .. +20,000
+			79							27			12768	52768	-20,000 .. +20,000
+			7d							28			12768	52768	-20,000 .. +20,000
+		03	11							29			12768	52768	-20,000 .. +20,000
+			15							30			12768	52768	-20,000 .. +20,000
+			19							31			12768	52768	-20,000 .. +20,000
+			1d							32			12768	52768	-20,000 .. +20,000
+		04	00					chorus			
+			00						type		
+			01						level		
+			02						output_assign				0	3	A, ___, ___, ___
+			03						output_select				0	2	MAIN, REV, MAIN+REV
+			04						parameter		
+			04							1			12768	52768	-20,000 .. +20,000
+			08							2			12768	52768	-20,000 .. +20,000
+			0c							3			12768	52768	-20,000 .. +20,000
+			10							4			12768	52768	-20,000 .. +20,000
+			14							5			12768	52768	-20,000 .. +20,000
+			18							6			12768	52768	-20,000 .. +20,000
+			1c							7			12768	52768	-20,000 .. +20,000
+			20							8			12768	52768	-20,000 .. +20,000
+			24							9			12768	52768	-20,000 .. +20,000
+			28							10			12768	52768	-20,000 .. +20,000
+			2c							11			12768	52768	-20,000 .. +20,000
+			30							12			12768	52768	-20,000 .. +20,000
+			34							13			12768	52768	-20,000 .. +20,000
+			38							14			12768	52768	-20,000 .. +20,000
+			3c							15			12768	52768	-20,000 .. +20,000
+			40							16			12768	52768	-20,000 .. +20,000
+			44							17			12768	52768	-20,000 .. +20,000
+			48							18			12768	52768	-20,000 .. +20,000
+			4c							19			12768	52768	-20,000 .. +20,000
+			50							20			12768	52768	-20,000 .. +20,000
+		06	00					reverb			
+			00						type				0	5
+			01						level				0	127
+			02						output_assign				0	3	A, ___, ___, ___
+			03						parameter		
+			03							1			12768	52768	-20,000 .. +20,000
+			07							2			12768	52768	-20,000 .. +20,000
+			0b							3			12768	52768	-20,000 .. +20,000
+			0f							4			12768	52768	-20,000 .. +20,000
+			13							5			12768	52768	-20,000 .. +20,000
+			17							6			12768	52768	-20,000 .. +20,000
+			1b							7			12768	52768	-20,000 .. +20,000
+			1f							8			12768	52768	-20,000 .. +20,000
+			23							9			12768	52768	-20,000 .. +20,000
+			27							10			12768	52768	-20,000 .. +20,000
+			2b							11			12768	52768	-20,000 .. +20,000
+			2f							12			12768	52768	-20,000 .. +20,000
+			33							13			12768	52768	-20,000 .. +20,000
+			37							14			12768	52768	-20,000 .. +20,000
+			3b							15			12768	52768	-20,000 .. +20,000
+			3f							16			12768	52768	-20,000 .. +20,000
+			43							17			12768	52768	-20,000 .. +20,000
+			47							18			12768	52768	-20,000 .. +20,000
+			4b							19			12768	52768	-20,000 .. +20,000
+			4f							20			12768	52768	-20,000 .. +20,000
+		08	00					mfx2					SEE mfx1
+		0a	00					mfx3					SEE mfx1
+		10	00					midi	1		
+			00							rx	
+			00								pc		0	1
+			01								bank		0	1
+			02								bend		0	1
+			03								key_pressure		0	1
+			04								channel_pressure		0	1
+			05								modulation		0	1
+			06								volume		0	1
+			07								pan		0	1
+			08								expression		0	1
+			09								hold_1		0	1
+			0a							phase_lock			0	1
+			0b							velocity_curve_type			0	4	OFF, 1 .. 4	
+		11	00						2				SEE midi.1
+		12	00						3				SEE midi.1
+		13	00						4				SEE midi.1
+		14	00						5				SEE midi.1
+		15	00						6				SEE midi.1
+		16	00						7				SEE midi.1
+		17	00						8				SEE midi.1
+		18	00						9				SEE midi.1
+		19	00						10				SEE midi.1
+		1a	00						11				SEE midi.1
+		1b	00						12				SEE midi.1
+		1c	00						13				SEE midi.1
+		1d	00						14				SEE midi.1
+		1e	00						15				SEE midi.1
+		1f	00						16				SEE midi.1
+		20	00					part	1		
+			00							rx_channel			0	15	1 - 16
+			01							rx_switch			0	1
+			02							reserved_1
+			04							patch_bank_msb	
+			05							patch_bank_lsb	
+			06							patch_pc	
+			07							level	
+			08							pan	
+			09							coarse_tune			16	112	-48 .. +48
+			0a							fine_tune			14	114	-50 .. +50
+			0b							mono_poly			0	2	MONO, POLY, PATCH
+			0c							legato				0	2	OFF, ON, PATCH
+			0d							bend_range			0	25	0 .. 24, PATCH
+			0e							portamento_switch			0	2	OFF, ON, PATCH
+			0f							portamento_time			0	128	0 .. 127, PATCH  two nibbles
+			11							cutoff_offset			0	127	-64 .. +63
+			12							resonance_offset			0	127	-64 .. +63
+			13							attack_offset			0	127	-64 .. +63
+			14							release_offset			0	127	-64 .. +63
+			15							octave_shift			61	67	-3 .. +3
+			16							velocity_sens_offset		1	127	-63 .. +63
+			17							reserved_2	
+			1b							mute			0	1
+			1c							dry_send			0	127
+			1d							chorus_send			0	127
+			1e							reverb_send			0	127
+			1f							output_assign			0	13	MFX, A, ___, ___, ___, 1, 2, ___, ___, ___, ___, ___, ___	
+			20							output_mfx_select			0	2	MFX1, MFX2, MFX3
+			21							decay_offset			0	127	-64 .. +63
+			22							vibrato_rate			0	127	-64 .. +63
+			23							vibrato_depth			0	127	-64 .. +63
+			24							vibrato_delay			0	127	-64 .. +63
+			25							scale	
+			25								c		0	127	-64 .. +63
+			26								c#		0	127	-64 .. +63
+			27								d		0	127	-64 .. +63
+			28								d#		0	127	-64 .. +63
+			29								e		0	127	-64 .. +63
+			2a								f		0	127	-64 .. +63
+			2b								f#		0	127	-64 .. +63
+			2c								g		0	127	-64 .. +63
+			2d								g#		0	127	-64 .. +63
+			2e								a		0	127	-64 .. +63
+			2f								a#		0	127	-64 .. +63
+			30								b		0	127	-64 .. +63
+		21	00						2				SEE: part.1
+		22	00						3				SEE: part.1
+		23	00						4				SEE: part.1
+		24	00						5				SEE: part.1
+		25	00						6				SEE: part.1
+		26	00						7				SEE: part.1
+		27	00						8				SEE: part.1
+		28	00						9				SEE: part.1
+		29	00						10				SEE: part.1
+		2a	00						11				SEE: part.1
+		2b	00						12				SEE: part.1
+		2c	00						13				SEE: part.1
+		2d	00						14				SEE: part.1
+		2e	00						15				SEE: part.1
+		2f	00						16				SEE: part.1
+		50	00					zone	1		
+											
+		51	00						2				SEE: zone.1
+		52	00						3				SEE: zone.1
+		53	00						4				SEE: zone.1
+		54	00						5				SEE: zone.1
+		55	00						6				SEE: zone.1
+		56	00						7				SEE: zone.1
+		57	00						8				SEE: zone.1
+		58	00						9				SEE: zone.1
+		59	00						10				SEE: zone.1
+		5a	00						11				SEE: zone.1
+		5b	00						12				SEE: zone.1
+		5c	00						13				SEE: zone.1
+		5d	00						14				SEE: zone.1
+		5e	00						15				SEE: zone.1
+		5f	00						16				SEE: zone.1
+		60	00					controller			
+11	00	00	00			performance_mode	part	1			
+	00	00	00						patch		
+		00	00							common	
+		02	00							mfx	
+		04	00							chorus	
+		06	00							reverb	
+		10	00							tmt	
+		20	00							tone	
+		20	00								1
+		22	00								2
+		24	00								3
+		26	00								4
+	10	00	00						drum		
+		00	00							common	
+		02	00							mfx	
+		04	00							chorus	
+		06	00							reverb	
+		10	00							tone	
+		10	00								21
+		12	00								22
+		14	00								23
+		16	00								24
+		18	00								25
+		1a	00								26
+		1c	00								27
+		1e	00								28
+		20	00								29
+		22	00								30
+		24	00								31
+		26	00								32
+		28	00								33
+		2a	00								34
+		2c	00								35
+		2e	00								36
+		30	00								37
+		32	00								38
+		34	00								39
+		36	00								40
+		38	00								41
+		3a	00								42
+		3c	00								43
+		3e	00								44
+		40	00								45
+		42	00								46
+		44	00								47
+		46	00								48
+		48	00								49
+		4a	00								50
+		4c	00								51
+		4e	00								52
+		50	00								53
+		52	00								54
+		54	00								55
+		56	00								56
+		58	00								57
+		5a	00								58
+		5c	00								59
+		5e	00								60
+		60	00								61
+		62	00								62
+		64	00								63
+		66	00								64
+		68	00								65
+		6a	00								66
+		6c	00								67
+		6e	00								68
+		70	00								69
+		72	00								70
+		74	00								71
+		76	00								72
+		78	00								73
+		7a	00								74
+		7c	00								75
+		7e	00								76
+	11	00	00								77
+		02	00								78
+		04	00								79
+		06	00								80
+		08	00								81
+		0a	00								82
+		0c	00								83
+		0e	00								84
+		10	00								85
+		12	00								86
+		14	00								87
+		16	00								88
+		18	00								89
+		1a	00								90
+		1c	00								91
+		1e	00								92
+		20	00								93
+		22	00								94
+		24	00								95
+		26	00								96
+		28	00								97
+		2a	00								98
+		2c	00								99
+		2e	00								100
+		30	00								101
+		32	00								102
+		34	00								103
+		36	00								104
+		38	00								105
+		3a	00								106
+		3c	00								107
+	11	3e	00								108
+11	20	00	00					2					SEE: part.1
+11	40	00	00					3					SEE: part.1
+11	60	00	00					4					SEE: part.1
+12	00	00	00					5					SEE: part.1
+12	20	00	00					6					SEE: part.1
+12	40	00	00					7					SEE: part.1
+12	60	00	00					8					SEE: part.1
+13	00	00	00					9					SEE: part.1
+13	20	00	00					10					SEE: part.1
+13	40	00	00					11					SEE: part.1
+13	60	00	00					12					SEE: part.1
+14	00	00	00					13					SEE: part.1
+14	20	00	00					14					SEE: part.1
+14	40	00	00					15					SEE: part.1
+14	60	00	00					16					SEE: part.1
+1e	00	00	00			rhythm_pattern					
+		00	00				common				
+			00					end_step							1	32
+			02					name								32	127	ASCII char[16]
+		10	00				note				
+		10	00					1			
+			00						original_note			0	128	two nibbles
+			02						step		
+			02							1	
+			04							2			0	128	two nibbles
+			06							3			0	128	two nibbles
+			08							4			0	128	two nibbles
+			0a							5			0	128	two nibbles
+			0c							6			0	128	two nibbles
+			0e							7			0	128	two nibbles
+			10							8			0	128	two nibbles
+			12							9			0	128	two nibbles
+			14							10			0	128	two nibbles
+			16							11			0	128	two nibbles
+			18							12			0	128	two nibbles
+			1a							13			0	128	two nibbles
+			1c							14			0	128	two nibbles
+			1e							15			0	128	two nibbles
+			20							16			0	128	two nibbles
+			22							17			0	128	two nibbles
+			24							18			0	128	two nibbles
+			26							19			0	128	two nibbles
+			28							20			0	128	two nibbles
+			2a							21			0	128	two nibbles
+			2c							22			0	128	two nibbles
+			2e							23			0	128	two nibbles
+			30							24			0	128	two nibbles
+			32							25			0	128	two nibbles
+			34							26			0	128	two nibbles
+			36							27			0	128	two nibbles
+			38							28			0	128	two nibbles
+			3a							29			0	128	two nibbles
+			3c							30			0	128	two nibbles
+			3e							31			0	128	two nibbles
+			40							32			0	128	two nibbles
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+											
+		11	00					2					SEE: note.1
+		12	00					3					SEE: note.1
+		13	00					4					SEE: note.1
+		14	00					5					SEE: note.1
+		15	00					6					SEE: note.1
+		16	00					7					SEE: note.1
+		17	00					8					SEE: note.1
+		18	00					9					SEE: note.1
+		19	00					10					SEE: note.1
+		1a	00					11					SEE: note.1
+		1b	00					12					SEE: note.1
+		1c	00					13					SEE: note.1
+		1d	00					14					SEE: note.1
+		1e	00					15					SEE: note.1
+		1f	00					16					SEE: note.1
+1e	11	00	00			arpeggio					
+		00	00				common				
+		10	00				note				
+		10	00					1			
+		11	00					2			
+		12	00					3			
+		13	00					4			
+		14	00					5			
+		15	00					6			
+		16	00					7			
+		17	00					8			
+		18	00					9			
+		19	00					10			
+		1a	00					11			
+		1b	00					12			
+		1c	00					13			
+		1d	00					14			
+		1e	00					15			
+		1f	00					16			
+1e	13	00	00			rhythm_group					
+1e	15	00	00			vocal_effect					
+1f	00	00	00			patch_mode	patch_drum	1			
+1f	20	00	00					2			
+20	00	00	00		user_performance	1					
+20	01	00	00			2					
+20	02	00	00			3					
+20	7f	00	00			128					
+21	00	00	00		user_pattern	1					
+21	01	00	00			2					
+21	02	00	00			3					
+21	7f	00	00			128					
+30	00	00	00		user_patch	1					
+30	01	00	00			2					
+31	00	00	00			129					
+31	7f	00	00			256					
+40	00	00	00		user_drum_kit	1					
+40	10	00	00			2					
+40	70	00	00			8					
+60	00	00	00		user_vocal_effect	1					
+60	00	01	00			2					
+60	00	13	00			20					
+											
