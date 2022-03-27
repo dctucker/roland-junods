@@ -112,11 +112,109 @@ let midi_n = @[
   CM(0x0b, "velocity_curve_type"),
 ]
 
-proc midi(): seq[Mem] =
+proc midi(): MemArea =
   for i in 0..15:
     result.add( CMA(JAddr(0x100*i), $(i+1), midi_n) )
 
-let juno_map = CMAO("junods",
+let part_n = @[
+  CM(0x00, "rx_channel", TNibble),
+  CM(0x01, "rx_switch", TByte),
+  CM(0x02, "reserved_1"),
+  CM(0x04, "patch_bank_msb", TByte),
+  CM(0x05, "patch_bank_lsb", TByte),
+  CM(0x06, "patch_pc", TByte),
+  CM(0x07, "level", TByte),
+  CM(0x08, "pan", TByte),
+  CM(0x09, "coarse_tune", TByte),
+  CM(0x0a, "fine_tune", TByte),
+  CM(0x0b, "mono_poly", TEnum),
+  CM(0x0c, "legato", TEnum),
+  CM(0x0d, "bend_range", TByte),
+  CM(0x0e, "portamento_switch", TEnum),
+  CM(0x0f, "portamento_time", TNibblePair),
+  CM(0x11, "cutoff_offset", TByte),
+  CM(0x12, "resonance_offset", TByte),
+  CM(0x13, "attack_offset", TByte),
+  CM(0x14, "release_offset", TByte),
+  CM(0x15, "octave_shift", TByte),
+  CM(0x16, "velocity_sens_offset", TByte),
+  CM(0x17, "reserved_2"),
+  CM(0x1b, "mute", TBool),
+  CM(0x1c, "dry_send", TByte),
+  CM(0x1d, "chorus_send", TByte),
+  CM(0x1e, "reverb_send", TByte),
+  CM(0x1f, "output_assign", TEnum),
+  CM(0x20, "output_mfx_select", TEnum),
+  CM(0x21, "decay_offset", TByte),
+  CM(0x22, "vibrato_rate", TByte),
+  CM(0x23, "vibrato_depth", TByte),
+  CM(0x24, "vibrato_delay", TByte),
+  CMA(0x25, "scale", scale_map),
+]
+proc parts(n: int = 16): MemArea =
+  for i in 0..<n:
+    result.add( CMA(JAddr(0x100*i), $(i+1), part_n) )
+
+let zone_n = @[
+  CM(0x00, "octave_shift", TByte),
+  CM(0x01, "switch", TBool),
+  CM(0x02, "reserved_1"),
+  CM(0x0c, "range_lower", TByte),
+  CM(0x0d, "range_upper", TByte),
+  CM(0x0e, "reserved_2"),
+  CM(0x1a, "reserved_3"),
+]
+proc zones(n: int = 16): MemArea =
+  for i in 0..<n:
+    result.add( CMA(JAddr(0x100*i), $(i+1), zone_n) )
+
+let drum_tone_n = @[
+  CM(0, "name", TName),
+]
+proc drum_tones(): MemArea =
+  for i in 21..108:
+    let j = i - 21
+    let k = 0x1000 + (0x200 * j)
+    let a = ((k and 0x8000) shl 1) or (k and 0x7fff)
+    result.add( CMA(JAddr(a), $i, drum_tone_n) )
+
+let patch_drum = @[
+  CMA(    0x00000000, "patch",
+    CMA(    0x000000, "common",
+      CMA(  0x000200, "mfx",
+      ),
+      CMA(  0x000400, "chorus",
+      ),
+      CMA(  0x000600, "reverb",
+      ),
+    ),
+    CMA(    0x001000, "tmt",
+      CMAO("tone",
+        CMA(0x002000, "1",
+        ),
+        CMA(0x002200, "2",
+        ),
+        CMA(0x002400, "3",
+        ),
+        CMA(0x002600, "4",
+        ),
+      ),
+    ),
+  ),
+  CMA(    0x00100000, "drum",
+    CMA(    0x000000, "common",
+    ),
+    CMA(    0x000200, "mfx",
+    ),
+    CMA(    0x000400, "chorus",
+    ),
+    CMA(    0x000600, "reverb",
+    ),
+    CMAO("tone", drum_tones()),
+  ),
+]
+
+let juno_map = CMAO("",
   CMA(0x01000000, "setup",
     CM(     0x00, "sound_mode", TEnum),
     CMAO(         "performance",
@@ -220,7 +318,7 @@ let juno_map = CMAO("junods",
     ),
   ),
   CMA(0x10000000, "temporary",
-    CMA(0x000000, "performance_pattern",
+   CMA(0x0000000, "performance_pattern",
       CMA(0x0000, "common",
         CM( 0x00, "name", TName),
         CM( 0x0c, "solo", TBool),
@@ -255,13 +353,52 @@ let juno_map = CMAO("junods",
       CMA(0x0800, "mfx2", mfx),
       CMA(0x0a00, "mfx3", mfx),
       CMA(0x1000, "midi", midi()),
-      CMA(0x2000, "part",
+      CMA(0x2000, "part", parts()),
+      CMA(0x5000, "zone", zones()),
+      CMA(0x6000, "controller",
+        CM( 0x00, "reserved_1"),
+        CM( 0x18, "arp_zone_number", TByte),
+        CM( 0x19, "reserved_1"),
+        CM( 0x54, "recommended_tempo", TNibblePair),
+        CM( 0x56, "reserved_2"),
+        CM( 0x59, "reserved_3"),
       ),
+   ),
+   CMA(  0x1000000, "performance_part",
+     CMA(0x0000000,  "1", patch_drum),
+     CMA(0x0200000,  "2", patch_drum),
+     CMA(0x0400000,  "3", patch_drum),
+     CMA(0x0600000,  "4", patch_drum),
+     CMA(0x1000000,  "5", patch_drum),
+     CMA(0x1200000,  "6", patch_drum),
+     CMA(0x1400000,  "7", patch_drum),
+     CMA(0x1600000,  "8", patch_drum),
+     CMA(0x2000000,  "9", patch_drum),
+     CMA(0x2200000, "10", patch_drum),
+     CMA(0x2400000, "11", patch_drum),
+     CMA(0x2600000, "12", patch_drum),
+     CMA(0x3000000, "13", patch_drum),
+     CMA(0x3200000, "14", patch_drum),
+     CMA(0x3400000, "15", patch_drum),
+     CMA(0x3600000, "16", patch_drum),
+   ),
+  ),
+  CMA(  0x20000000, "user",
+    CMA(0x00000000, "performance",
+    ),
+    CMA(0x01000000, "pattern",
+    ),
+    CMA(0x10000000, "patch",
+    ),
+    CMA(0x20000000, "drum_kit",
+    ),
+    CMA(0x40000000, "vocal_effect",
     ),
   ),
 )
 
-proc traverse(mem: Mem, offset: JAddr, level: int) =
+proc traverse(mem: Mem, offset: JAddr, path: seq[string]) =
+  let level = path.len
   var a = offset
   if mem.offset >= 0:
     a += mem.offset
@@ -269,11 +406,14 @@ proc traverse(mem: Mem, offset: JAddr, level: int) =
   else:
     stdout.write "           "
 
-  stdout.write indent(mem.name, level * 4)
+  var desc = (path & mem.name).join(".")
+  if desc.len > 0:
+    desc = desc[1..^1]
+  stdout.write desc
   stdout.write "\n"
   for area in mem.area:
-    traverse(area, a, level + 1)
+    traverse(area, a, path & mem.name)
 
 when isMainModule:
-  traverse(juno_map, 0, 0)
+  traverse(juno_map, 0, @[])
 
