@@ -958,7 +958,8 @@
       1e 00				15					SEE: note.1			
       1f 00				16					SEE: note.1			
 1e 11 00 00		arpeggio										
-      00 00			common									
+      00 00			end_step									
+      00 02			name										
       10 00			note									
       10 00				1								
       11 00				2								
@@ -1002,26 +1003,26 @@
 1e 15 00 00		vocal_effect										
       00 00			name						32	127	ASCII char[12]	
          0c			type						0	1	Vocoder, Auto-Pitch	
-         0d												
-         0e												
-         0f												
-         10												
-         11												
-         12												
-         13												
-         16												
-         17												
-         18												
-         19												
-         1a												
-         1b												
-         1c												
-         1d												
-         1e												
-         1f												
-         20												
-         21												
-         22												
+         0d			reserve_1									
+         0e			bank_msb									
+         0f			bank_lsb									
+         10			pc									
+         11			level									
+         12			pan									
+         13			reserve_2									
+         16			auto_pitch	type								
+         17				scale								
+         18				key								
+         19				note								
+         1a				gender								
+         1b				octave								
+         1c				balance								
+         1d			vocoder	envelope								
+         1e				mic_sens								
+         1f				synth_level								
+         20				mic_mix								
+         21				mic_hpf								
+         22			part_level									
            												
 1f 00 00 00		patch_mode	patch_drum	1								
 1f 20 00 00				2								
