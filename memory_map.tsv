@@ -349,30 +349,32 @@
       00 00					common							
          00						name			0	127	ASCII char[12]	
          0c						category			0	127		
-           						level			0	127		
-           						pan			0	127	
-           						priority			0	1	LAST, LOUDEST	
-           						coarse_tune			16	112	-48 .. +48	
-           						fine_tune			14	114	-50 .. +50	
-           						octave_shift			61	67	-3 .. +3	
-           						stretch_tune_depth			0	3	OFF, 1 .. 3	
-           						analog_feel			0	127		
-           						mono_poly			0	1	MONO, POLY	
-           						legato_switch			0	1		
-           						legato_retrigger			0	1		
-           						portamento	switch						
-           							mode						
-           							type						
-           							start						
-           							time						
-           						cutoff_offset						
-           						resonance_offset						
-           						attack_offset						
-           						release_offset						
-           						velocity_offset						
-           						output_assign						
-           						tmt_control_switch						
-           						bend_range_up						
+         0d						reserved_1						
+         0e						level			0	127		
+         0f						pan			0	127	
+         10						priority			0	1	LAST, LOUDEST	
+         11						coarse_tune			16	112	-48 .. +48	
+         12						fine_tune			14	114	-50 .. +50	
+         13						octave_shift			61	67	-3 .. +3	
+         14						stretch_tune_depth			0	3	OFF, 1 .. 3	
+         15						analog_feel			0	127		
+         16						mono_poly			0	1	MONO, POLY	
+         17						legato_switch			0	1		
+         18						legato_retrigger			0	1		
+         19						portamento	switch						
+         1a							mode						
+         1b							type						
+         1c							start						
+         1d							time						
+         1e						reserved_2							
+         22						cutoff_offset						
+         23						resonance_offset						
+         24						attack_offset						
+         25						release_offset						
+         26						velocity_offset						
+         27						output_assign						
+         28						tmt_control_switch						
+         29						bend_range_up						
          2a						bend_range_down						
            						matrix_control						
          2b							1	source	1			
@@ -492,20 +494,20 @@
          4b							19				12768	52768	-20,000 .. +20,000	
          4f							20				12768	52768	-20,000 .. +20,000	
       10 00					tmt							
-           						1-2	structure_type					
-           							booster					
-           						3-4	structure_type					
-           							booster					
-           						velocity_control						
-           						1	tone_switch					
-           							keyboard	range_lower					
-           								range_upper					
-           								fade_lower					
-           								fade_upper					
-           							velocity	range_lower				
-           								range_upper				
-           								fade_lower				
-           								fade_upper				
+         00						1-2	structure_type					
+         01							booster					
+         02						3-4	structure_type					
+         03							booster					
+         04						velocity_control						
+         05						1	tone_switch					
+         06							keyboard	range_lower					
+         07								range_upper					
+         08								fade_lower					
+         09								fade_upper					
+         0a							velocity	range_lower				
+         0b								range_upper				
+         0c								fade_lower				
+         0d								fade_upper				
            						2							SEE: tmt.1
            						3							SEE: tmt.1
            						4							SEE: tmt.1
@@ -513,26 +515,26 @@
       20 00						1						
          00							level					
          01							coarse_tune					
-           							fine_tune					
-           							random_pitch_depth					
-           							pan					
-           							pan_keyfollow					
-           							random_pan_depth					
-           							alt_pan_depth					
-           							env_mode					
-           							delay_mode					
-           							delay_time					
-           							dry_send					
-           							chorus_send_mfx					
-           							reverb_send_mfx					
-           							chorus_send					
-           							reverb_send					
-           							output_assign					
-           							rx	bend				
-           								expression				
-           								hold_1				
-           								pan_mode				
-           							redamper_switch					
+         02							fine_tune					
+         03							random_pitch_depth					
+         04							pan					
+         05							pan_keyfollow					
+         06							random_pan_depth					
+         07							alt_pan_depth					
+         08							env_mode					
+         09							delay_mode					
+         0a							delay_time					
+         0c							dry_send					
+         0d							chorus_send_mfx					
+         0e							reverb_send_mfx					
+         0f							chorus_send					
+         10							reverb_send					
+         11							output_assign					
+         12							rx	bend				
+         13								expression				
+         14								hold_1				
+         15								pan_mode				
+         16							redamper_switch					
          17							control	1	switch	1		
          18										2		
          19										3		
@@ -542,100 +544,107 @@
          23								4				SEE: control.1
          27							reserved					
          2c							wave	number	l			
-           									r			
-           								gain				
-           								fxm	switch			
-           									color			
-           									depth			
-           								tempo_sync				
-           								pitch_keyfollow				
-           							pitch_env	depth				
-           								velocity_sens				
-           								time_1_velocity_sens				
-           								time_4_velocity_sens				
-           								time_keyfollow				
-           								time	1			
-           									2			
-           									3			
-           									4			
-           								level	0			
-           									1			
-           									2			
-           									3			
-           									4			
+         30									r			
+         34								gain				
+         35								fxm	switch			
+         36									color			
+         37									depth			
+         38								tempo_sync				
+         39								pitch_keyfollow				
+         3a							pitch_env	depth				
+         3b								velocity_sens				
+         3c								time_1_velocity_sens				
+         3d								time_4_velocity_sens				
+         3e								time_keyfollow				
+         3f								time	1			
+         40									2			
+         41									3			
+         42									4			
+         43								level	0			
+         44									1			
+         45									2			
+         46									3			
+         47									4			
          48							tvf	filter_type				
-           								cutoff	frequency			
-           									keyfollow			
-           									velocity_curve			
-           									velocity_sens			
-           								resonance				
-           									velocity_sens			
-           								env	depth			
-           									velocity_curve			
-           									velocity_sens			
-           									time	1		
-           										2		
-           										3		
-           										4		
-           									level	0		
-           										1		
-           										2		
-           										3		
-           							bias	level		4		
-           								position				
-           								direction				
-           							tva	level	velocity_curve			
-           									velocity_sens			
-           								env	time	1		
-           										2		
-           										3		
-           										4		
-           									level	1		
-           										2		
+         49								cutoff	frequency			
+         4a									keyfollow			
+         4b									velocity_curve			
+         4c									velocity_sens			
+         4d								resonance				
+         4e									velocity_sens			
+         4f								env	depth			
+         50									velocity_curve			
+         51									velocity_sens			
+         52									time_1_velocity_sens				
+         53									time_4_velocity_sens				
+         54									time_keyfollow				
+         55									time	1		
+         56										2		
+         57										3		
+         58										4		
+         59									level	0		
+         5a										1		
+         5b										2		
+         5c										3		
+         5d										4		
+         5e							bias	level
+         5f								position				
+         60								direction				
+         61							tva	level	velocity_curve			
+         62									velocity_sens			
+         63									time_1_velocity_sens				
+         64									time_4_velocity_sens				
+         65									time_keyfollow				
+         66								env	time	1		
+         67										2		
+         68										3		
+         69										4		
+         6a									level	1		
+         6b										2		
          6c										3		
          6d							lfo	1	waveform			
-           									rate			
-           									offset			
-           									rate_detune			
-           									delay	time		
-           											key_follow	
-           									fade	mode		
-           										time		
-           									key_trigger			
-           									pitch_depth			
-           									tvf_depth			
-           									tva_depth			
-           									pan_depth			
+         6e									rate			
+         70									offset			
+         71									rate_detune			
+         72									delay	time		
+         73											key_follow	
+         74									fade	mode		
+         75										time		
+         76									key_trigger			
+         77									pitch_depth			
+         78									tvf_depth			
+         79									tva_depth			
+         7a									pan_depth			
          7b								2	waveform			
-           									rate			
-           									offset			
-         7f									rate_detune			
-      03 00									delay	time		
-           											key_follow	
-           									fade	mode		
-           										time		
-           									key_trigger			
-           									pitch_depth			
-           									tvf_depth			
-           									tva_depth			
-      03 08									pan_depth			
-           								step	type			
-           									1			
-           									2			
-           									3			
-           									4			
-           									5			
-           									6			
-           									7			
-           									8			
-           									9			
-           									10			
-           									11			
-           									12			
-           									13			
-           									14			
-           									15			
-      01 19									16			
+         7c									rate			
+         7e									offset			
+      20 7f									rate_detune			
+      21 00									delay	time		
+         01											key_follow	
+         02									fade	mode		
+         03										time		
+         04									key_trigger			
+         05									pitch_depth			
+         06									tvf_depth			
+         07									tva_depth			
+         08									pan_depth			
+         09								step	type			
+         0a									1			
+         0b									2			
+         0c									3			
+         0d									4			
+         0e									5			
+         0f									6			
+         10									7			
+         11									8			
+         12									9			
+         13									10			
+         14									11			
+         15									12			
+         16									13			
+         17									14			
+         18									15			
+      21 19									16			
       22 00						2							SEE: tone.1
       24 00						3							SEE: tone.1
       26 00						4							SEE: tone.1
@@ -699,96 +708,95 @@
       06 00					reverb							
       10 00					tone							
       10 00						21					
-           							name					32	127	char[12]
-           							assign_type								
-           							mute_group								
-           							tone	level							
-           								coarse_tune							
-           								fine_tune							
-           								random_pitch_depth							
-           								pan							
-           								random_pan_depth							
-           								alt_pan_depth							
-           								env_mode							
-           								dry_send							
-           								chorus_send							
-           								reverb_send							
-           								chorus_send							
-           								reverb_send							
-           								output_assign							
-           								bend_range							
-           								rx							
-           									expression						
-           									hold_1						
-           									pan_mode						
-           								wmt	velocity_control					
-           									1	wave	switch					
-         23											reserved_1
-         27											reserved_2
-           											number	l			
-           												r			
-           											gain			
-           											fxm	switch			
-           												color		
-           												depth		
-           											tempo_sync			
-           											coarse_tune			
-           											fine_tune			
-           											pan			
-           											random_pan_switch			
-           											alt_pan_switch			
-           											level			
-           											velocity	range_lower		
-           												range_upper		
-           												fade_lower		
-           												fade_upper		
-         3e									2								SEE: wmt.1
-         5b									3								SEE: wmt.1
-         78									4								SEE: wmt.1
-      11 15								pitch_env	depth						
-           									velocity_sens						
-           									time_1	velocity_sens				
-           									time_4	velocity_sens				
-           									time	1					
-           										2					
-           										3					
-           										4					
-           									level	0					
-           										1					
-           										2					
-           										3					
-           										4					
-           								tvf	filter_type						
-           									cutoff	frequency					
-           										velocity_curve					
-           										velocity_sens					
-           									resonance						
-           									resonance	velocity_sens					
-           									env	depth					
-           										velocity_curve_type					
-           										velocity_sens					
-           										time_1	velocity_sens				
-           										time_4	velocity_sens				
-           										time	1				
-           											2				
-           											3				
-           											4				
-           										level	0				
-           											1				
-           											2				
-           											3				
-           											4				
-           								tva	level	velocity_curve					
-           										velocity_sens					
-           									env	time_1				
-           										time_4					
-           										time	1				
-           											2				
-           											3				
-           											4				
-           										level	1				
-           											2				
-           											3				
+         00							name					32	127	char[12]
+         0c							assign_type								
+         0d							mute_group								
+         0e							level							
+         0f							coarse_tune							
+         10							fine_tune							
+         11							random_pitch_depth							
+         12							pan							
+         13							random_pan_depth							
+         14							alt_pan_depth							
+         15							env_mode							
+         16							dry_send							
+         17							chorus_send							
+         18							reverb_send							
+         19							chorus_send							
+         1a							reverb_send							
+         1b							output_assign							
+         1c							bend_range							
+         1d							rx							
+         1e								expression						
+         1f								hold_1						
+         20								pan_mode						
+         21							wmt	velocity_control					
+         22								1	wave	switch					
+         23										reserved
+         27										number	l			
+         2b											r			
+         2f										gain			
+         30										fxm	switch			
+         31											color		
+         32											depth		
+         33										tempo_sync			
+         34										coarse_tune			
+         35										fine_tune			
+         36										pan			
+         37										random_pan_switch			
+         38										alt_pan_switch			
+         39										level			
+         3a										velocity	range_lower		
+         3b											range_upper		
+         3c											fade_lower		
+         3d											fade_upper		
+         3e								2								SEE: wmt.1
+         5b								3								SEE: wmt.1
+         78								4								SEE: wmt.1
+      11 15							pitch_env	depth						
+         16								velocity_sens						
+         17								time_1	velocity_sens				
+         18								time_4	velocity_sens				
+         19								time	1					
+         1a									2					
+         1b									3					
+         1c									4					
+         1d								level	0					
+         1e									1					
+         1f									2					
+         20									3					
+         21									4					
+         22							tvf	filter_type						
+         23								cutoff	frequency					
+         24									velocity_curve					
+         25									velocity_sens					
+         26								resonance						
+         27								resonance	velocity_sens					
+         28								env	depth					
+         29									velocity_curve_type					
+         2a									velocity_sens					
+         2b									time_1	velocity_sens				
+         2c									time_4	velocity_sens				
+         2d									time	1				
+         2e										2				
+         2f										3				
+         30										4				
+         31									level	0				
+         32										1				
+         33										2				
+         34										3				
+         35										4				
+         36							tva	level	velocity_curve					
+         37									velocity_sens					
+         38								env	time_1				
+         39									time_4					
+         3a									time	1				
+         3b										2				
+         3c										3				
+         3d										4				
+         3e									level	1				
+         3f										2				
+         40										3				
          41							one_shot_mode								
       11 42							relative_level								
            															
