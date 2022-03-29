@@ -44,6 +44,16 @@ proc CMA(offset: JAddr, name: string, area: varargs[Mem]): Mem =
 proc CMAO(name: string, area: varargs[Mem]): Mem =
   CMA(NOFF, name, area)
 
+proc repeat(thing: MemArea, n, span: int): seq[Mem] =
+  result = newSeqOfCap[Mem](n)
+  for i in 0..<n:
+    result.add(CMA(JAddr(span * i), $(i + 1), thing))
+
+proc repeat(kind: Kind, n, span: int): seq[Mem] =
+  result = newSeqOfCap[Mem](n)
+  for i in 0..<n:
+    result.add(CM(JAddr(span * i), $(i + 1), kind))
+
 let scale_map = @[
   CM(0x00, "c" , TByte),
   CM(0x01, "c#", TByte),
@@ -59,39 +69,16 @@ let scale_map = @[
   CM(0x0b, "b" , TByte),
 ]
 
-proc voice_reserve(): seq[Mem] =
-  for i in 0..15:
-    result.add(CM(JAddr(i), $(i+1), TByte))
-
-let control = @[
-  CMA(0, "1",
-    CM(0, "source", TEnum),
-    CM(1, "sens", TByte),
-  ),
-  CMA(2, "2",
-    CM(0, "source", TEnum),
-    CM(1, "sens", TByte),
-  ),
-  CMA(4, "3",
-    CM(0, "source", TEnum),
-    CM(1, "sens", TByte),
-  ),
-  CMA(6, "4",
-    CM(0, "source", TEnum),
-    CM(1, "sens", TByte),
-  ),
-  CMA(8, "assign",
-    CM(0, "1", TEnum),
-    CM(1, "2", TEnum),
-    CM(2, "3", TEnum),
-    CM(3, "4", TEnum),
-  ),
+let controls = @[
+  CM(0, "source", TEnum),
+  CM(1, "sens"  , TByte),
+]
+let control = controls.repeat(4, 2) & @[
+  CMA(8, "assign", TEnum.repeat(4,1))
 ]
 
-proc parameter(n: int): seq[Mem] =
-  result = newSeqOfCap[Mem](n)
-  for i in 0..<n:
-    result.add( CM(JAddr(4*i), $(i+1), TNibbleQuad) )
+let parameters_20 = TNibbleQuad.repeat(20, 4)
+let parameters_32 = TNibbleQuad.repeat(32, 4)
 
 let mfx = @[
   CM( 0x00, "type", TEnum),
@@ -100,14 +87,7 @@ let mfx = @[
   CM( 0x03, "reverb_send", TEnum),
   CM( 0x04, "output_asssign", TEnum),
   CMA(0x05, "control", control),
-  CMA(0x11, "parameter",
-    parameter(28) & @[
-      CM(0xf0, "29", TNibbleQuad),
-      CM(0xf4, "30", TNibbleQuad),
-      CM(0xf8, "31", TNibbleQuad),
-      CM(0xfc, "32", TNibbleQuad),
-    ],
-  ),
+  CMA(0x11, "parameter", parameters_32),
 ]
 
 let chorus = @[
@@ -115,13 +95,13 @@ let chorus = @[
   CM( 0x01, "level", TByte),
   CM( 0x02, "output_assign", TEnum),
   CM( 0x03, "output_select", TEnum),
-  CMA(0x04, "parameter", parameter(20)),
+  CMA(0x04, "parameter", parameters_20),
 ]
 let reverb = @[
   CM( 0x00, "type", TEnum),
   CM( 0x01, "level", TByte),
   CM( 0x02, "output_assign", TEnum),
-  CMA(0x03, "parameter", parameter(20)),
+  CMA(0x03, "parameter", parameters_20),
 ]
 
 let midi_n = @[
@@ -140,10 +120,6 @@ let midi_n = @[
   CM(0x0a, "phase_lock"),
   CM(0x0b, "velocity_curve_type"),
 ]
-
-proc midi(): MemArea =
-  for i in 0..15:
-    result.add( CMA(JAddr(0x100*i), $(i+1), midi_n) )
 
 let part_n = @[
   CM(0x00, "rx_channel", TNibble),
@@ -180,9 +156,6 @@ let part_n = @[
   CM(0x24, "vibrato_delay", TByte),
   CMA(0x25, "scale", scale_map),
 ]
-proc parts(n: int = 16): MemArea =
-  for i in 0..<n:
-    result.add( CMA(JAddr(0x100*i), $(i+1), part_n) )
 
 let zone_n = @[
   CM(0x00, "octave_shift", TByte),
@@ -193,9 +166,6 @@ let zone_n = @[
   CM(0x0e, "reserved_2"),
   CM(0x1a, "reserved_3"),
 ]
-proc zones(n: int = 16): MemArea =
-  for i in 0..<n:
-    result.add( CMA(JAddr(0x100*i), $(i+1), zone_n) )
 
 let matrix_control = @[
   CM(0, "source", TEnum),
@@ -209,20 +179,16 @@ let matrix_control = @[
   CM(8, "sens_4", TByte),
 ]
 
+let ranges = @[
+  CM(0, "range_lower", TByte),
+  CM(1, "range_upper", TByte),
+  CM(2, "fade_lower", TByte),
+  CM(3, "fade_upper", TByte),
+]
 let tmt_n = @[
   CM(0, "tone_switch", TBool),
-  CMAO("keyboard",
-    CM(1, "range_lower", TByte),
-    CM(2, "range_upper", TByte),
-    CM(3, "fade_lower", TByte),
-    CM(4, "fade_upper", TByte),
-  ),
-  CMAO("velocity",
-    CM(5, "range_lower", TByte),
-    CM(6, "range_upper", TByte),
-    CM(7, "fade_lower", TByte),
-    CM(8, "fade_upper", TByte),
-  ),
+  CMA(1, "keyboard", ranges),
+  CMA(5, "velocity", ranges),
 ]
 let tmt = @[
   CMAO("1-2",
@@ -455,12 +421,7 @@ let drum_wmt_n = @[
     CM(0x17, "alt_pan_switch", TBool),
     CM(0x18, "level", TByte),
   ),
-  CMAO("velocity",
-    CM(0x19, "range_lower", TByte),
-    CM(0x1a, "range_upper", TByte),
-    CM(0x1b, "fade_lower", TByte),
-    CM(0x1c, "fade_upper", TByte),
-  ),
+  CMA( 0x19, "velocity", ranges),
 ]
 
 let drum_tone_n = @[
@@ -569,12 +530,12 @@ let drum_tone_n = @[
   CM(0x141, "one_shot_mode", TBool),
   CM(0x142, "relative_level", TByte),
 ]
-proc drum_tones(): MemArea =
+proc generate_drum_tones(): MemArea =
   for i in 21..108:
-    let j = i - 21
-    let k = 0x1000 + (0x200 * j)
+    let k = 0x1000 + (0x200 * (i - 21))
     let a = ((k and 0x8000) shl 1) or (k and 0x7fff)
     result.add( CMA(JAddr(a), $i, drum_tone_n) )
+let drum_tones = generate_drum_tones()
 
 let patch = @[
   CMAO("common",
@@ -628,9 +589,6 @@ let patch = @[
     CMA(  0x002600, "4", patch_tone_n),
   ),
 ]
-proc patches(n: int): MemArea =
-  for i in 0..<n:
-    result.add( CMA( JAddr(0x10000 * i), $(i+1), patch) )
 
 let drum_kit = @[
   CMAO("common",
@@ -642,7 +600,7 @@ let drum_kit = @[
   CMA(    0x000200, "mfx", mfx),
   CMA(    0x000400, "chorus", chorus),
   CMA(    0x000600, "reverb", reverb),
-  CMAO("tone", drum_tones()),
+  CMAO("tone", drum_tones),
 ]
 
 let patch_drum = @[
@@ -650,39 +608,31 @@ let patch_drum = @[
   CMA(0x00100000, "drum", drum_kit ),
 ]
 
-proc steps(): MemArea =
-  for i in 0..<32:
-    result.add( CM( JAddr(2*i), $(i+1), TByte) )
-
+let arpeggio_steps = TByte.repeat(32, 2)
 let arpeggio_pattern = @[
   CM(0x0000, "original_note", TByte),
-  CMAO("step", steps()),
+  CMAO("step", arpeggio_steps),
 ]
-proc pattern_notes(n: int): MemArea =
-  for i in 0..<n:
-    result.add( CMA(0x100 * i, $(i+1), arpeggio_pattern) )
+let arpeggio_patterns = arpeggio_pattern.repeat(16, 0x100)
 let arpeggio = @[
   CM( 0x0000, "end_step", TByte),
   CM( 0x0002, "name", TName16),
   CM( 0x0012, "reserved"),
-  CMA(0x1000, "pattern_note", pattern_notes(16)),
+  CMA(0x1000, "pattern_note", arpeggio_patterns),
 ]
 
 let pad = @[
   CM(0, "velocity", TByte),
   CM(2, "pattern_number", TNibblePair),
 ]
-proc pads(): MemArea =
-  for i in 0..<8:
-    result.add( CMA( JAddr(0x15 + 2*i), $(i+1), pad) )
-
+let pads = pad.repeat(8, 2)
 let rhythm_group = @[
   CM(0x00, "name", TName16),
   CM(0x10, "bank_msb", TByte),
   CM(0x11, "bank_lsb", TByte),
   CM(0x12, "pc", TByte),
   CM(0x13, "reserved_1"),
-  CMAO("pad", pads()),
+  CMA(0x15, "pad", pads),
   CM(0x71, "reserved_2"),
   CM(0x72, "reserved_3"),
 ]
@@ -715,10 +665,11 @@ let vocal_effect = @[
   ),
   CM(0x22, "part_level", TByte),
 ]
-proc vocal_effects(n: int): MemArea =
-  for i in 0..<n:
-    result.add( CMA(0x100 * i, $(i+1), vocal_effect) )
 
+let voice_reserves = TByte.repeat(16, 1)
+let midis = midi_n.repeat(16, 0x100)
+let parts = part_n.repeat(16, 0x100)
+let zones = zone_n.repeat(16, 0x100)
 let performance_pattern = @[
   CMAO("common",
     CM(  0x00, "name", TName),
@@ -726,7 +677,7 @@ let performance_pattern = @[
     CM(  0x0d, "mfx1_channel", TByte),
     CM(  0x0e, "reserved_1"),
     CM(  0x0f, "reserved_2"),
-    CMA( 0x10, "voice_reserve", voice_reserve()),
+    CMA( 0x10, "voice_reserve", voice_reserves),
     CM(  0x20, "reserved_3"),
     CM(  0x30, "mfx1_source", TEnum),
     CM(  0x31, "mfx2_source", TEnum),
@@ -742,9 +693,9 @@ let performance_pattern = @[
   CMA( 0x0600, "reverb", reverb),
   CMA( 0x0800, "mfx2", mfx),
   CMA( 0x0a00, "mfx3", mfx),
-  CMA( 0x1000, "midi", midi()),
-  CMA( 0x2000, "part", parts()),
-  CMA( 0x5000, "zone", zones()),
+  CMA( 0x1000, "midi", midis),
+  CMA( 0x2000, "part", parts),
+  CMA( 0x5000, "zone", zones),
   CMA( 0x6000, "controller",
     CM(  0x00, "reserved_1"),
     CM(  0x18, "arp_zone_number", TByte),
@@ -754,115 +705,118 @@ let performance_pattern = @[
     CM(  0x59, "reserved_3"),
   ),
 ]
-proc performance_patterns(n: int): MemArea =
-  for i in 0..<n:
-    result.add( CMA(0x010000 * i, $(i+1), performance_pattern) )
 
+let setup = @[
+  CM(     0x00, "sound_mode", TEnum),
+  CMAO(         "performance",
+    CM(   0x01, "bank_msb", TByte),
+    CM(   0x02, "bank_lsb", TByte),
+    CM(   0x03, "pc", TByte),
+  ),
+  CMAO(          "kbd_patch",
+    CM(   0x04, "bank_msb", TByte),
+    CM(   0x06, "bank_lsb", TByte),
+    CM(   0x07, "pc", TByte),
+  ),
+  CMAO(         "rhy_patch",
+    CM(   0x07, "bank_msb", TByte),
+    CM(   0x08, "bank_lsb", TByte),
+    CM(   0x09, "pc", TByte),
+    CM(   0x0a, "mfx1_switch", TBool),
+    CM(   0x0b, "mfx2_switch", TBool),
+    CM(   0x0c, "mfx3_switch", TBool),
+    CM(   0x0d, "chorus_switch", TBool),
+    CM(   0x0e, "reverb_switch", TBool),
+    CM(   0x0f, "reserved_1"),
+    CM(   0x12, "transpose", TByte),
+    CM(   0x13, "octave", TByte),
+    CM(   0x14, "reserved_4"),
+    CM(   0x15, "knob_select", TByte),
+    CM(   0x16, "reserved_5"),
+    CMAO(       "arpeggio",
+      CM( 0x17, "grid", TEnum),
+      CM( 0x18, "duration", TEnum),
+      CM( 0x19, "switch", TBool),
+      CM( 0x1a, "reserved_6"),
+      CM( 0x1b, "style", TByte),
+      CM( 0x1c, "motif", TEnum),
+      CM( 0x1d, "octave", TByte),
+      CM( 0x1e, "hold", TBool),
+      CM( 0x1f, "accent", TByte),
+      CM( 0x20, "velocity", TByte),
+    ),
+    CMAO(       "rhythm",
+      CM( 0x21, "switch", TBool),
+      CM( 0x22, "reserved_7"),
+      CM( 0x23, "style", TNibblePair),
+      CM( 0x25, "reserved_8"),
+      CM( 0x26, "group", TByte),
+      CM( 0x27, "accent", TByte),
+      CM( 0x28, "velocity", TByte),
+      CM( 0x29, "reserved_9"),
+    ),
+    CM(   0x33, "arpeggio_step", TByte),
+  ),
+]
+let system = @[
+  CMA(0x000000, "common",
+    CMA(0x0000, "master",
+      CM( 0x00, "tune", TNibbleQuad),
+      CM( 0x04, "key_shift", TByte),
+      CM( 0x05, "level", TByte),
+    ),
+    CM(   0x06, "scale_switch", TBool),
+    CM(   0x07, "patch_remain", TBool),
+    CM(   0x08, "mix_parallel", TBool),
+    CM(   0x09, "channel", TBool),
+    CM(   0x0a, "kbd_patch_channel", TBool),
+    CM(   0x0b, "reserved_1", TBool),
+    CMA(  0x0c, "scale", scale_map),
+    CMAO(       "control_source",
+      CM( 0x18, "1", TEnum),
+      CM( 0x19, "2", TEnum),
+      CM( 0x1a, "3", TEnum),
+      CM( 0x1b, "4", TEnum),
+    ),
+    CMAO(       "rx",
+      CM( 0x1c, "pc", TByte),
+      CM( 0x1d, "bank", TByte),
+    ),
+  ),
+  CMA(0x004000, "controller",
+    CMAO(       "tx",
+      CM( 0x00, "pc", TByte),
+      CM( 0x01, "bank", TByte),
+    ),
+    CM(   0x02, "velocity", TByte),
+    CM(   0x03, "velocity_curve", TEnum),
+    CM(   0x04, "reserved_1"),
+    CM(   0x05, "hold_polarity", TBool),
+    CM(   0x06, "continuous_hold", TBool),
+    CMAO(       "control_pedal",
+      CM( 0x07, "assign", TEnum),
+      CM( 0x08, "polarity", TEnum),
+    ),
+    CM(   0x09, "reserved_2"),
+    CMAO(       "knob_assign",
+      CM( 0x10, "1", TByte),
+      CM( 0x11, "2", TByte),
+      CM( 0x12, "3", TByte),
+      CM( 0x13, "4", TByte),
+    ),
+    CM(   0x14, "reserved_2"),
+    CM(   0x4d, "reserved_3"),
+  ),
+]
+
+let performance_patterns = performance_pattern.repeat(128, 0x010000)
+let performance_patches = patch.repeat(256, 0x10000)
+let vocal_effects = vocal_effect.repeat(20, 0x100)
 let juno_map = CMAO("",
-  CMA(0x01000000, "setup",
-    CM(     0x00, "sound_mode", TEnum),
-    CMAO(         "performance",
-      CM(   0x01, "bank_msb", TByte),
-      CM(   0x02, "bank_lsb", TByte),
-      CM(   0x03, "pc", TByte),
-    ),
-    CMAO(          "kbd_patch",
-      CM(   0x04, "bank_msb", TByte),
-      CM(   0x06, "bank_lsb", TByte),
-      CM(   0x07, "pc", TByte),
-    ),
-    CMAO(         "rhy_patch",
-      CM(   0x07, "bank_msb", TByte),
-      CM(   0x08, "bank_lsb", TByte),
-      CM(   0x09, "pc", TByte),
-      CM(   0x0a, "mfx1_switch", TBool),
-      CM(   0x0b, "mfx2_switch", TBool),
-      CM(   0x0c, "mfx3_switch", TBool),
-      CM(   0x0d, "chorus_switch", TBool),
-      CM(   0x0e, "reverb_switch", TBool),
-      CM(   0x0f, "reserved_1"),
-      CM(   0x12, "transpose", TByte),
-      CM(   0x13, "octave", TByte),
-      CM(   0x14, "reserved_4"),
-      CM(   0x15, "knob_select", TByte),
-      CM(   0x16, "reserved_5"),
-      CMAO(       "arpeggio",
-        CM( 0x17, "grid", TEnum),
-        CM( 0x18, "duration", TEnum),
-        CM( 0x19, "switch", TBool),
-        CM( 0x1a, "reserved_6"),
-        CM( 0x1b, "style", TByte),
-        CM( 0x1c, "motif", TEnum),
-        CM( 0x1d, "octave", TByte),
-        CM( 0x1e, "hold", TBool),
-        CM( 0x1f, "accent", TByte),
-        CM( 0x20, "velocity", TByte),
-      ),
-      CMAO(       "rhythm",
-        CM( 0x21, "switch", TBool),
-        CM( 0x22, "reserved_7"),
-        CM( 0x23, "style", TNibblePair),
-        CM( 0x25, "reserved_8"),
-        CM( 0x26, "group", TByte),
-        CM( 0x27, "accent", TByte),
-        CM( 0x28, "velocity", TByte),
-        CM( 0x29, "reserved_9"),
-      ),
-      CM(   0x33, "arpeggio_step", TByte),
-    ),
-  ),
-  CMA(0x02000000, "system",
-    CMA(0x000000, "common",
-      CMA(0x0000, "master",
-        CM( 0x00, "tune", TNibbleQuad),
-        CM( 0x04, "key_shift", TByte),
-        CM( 0x05, "level", TByte),
-      ),
-      CM(   0x06, "scale_switch", TBool),
-      CM(   0x07, "patch_remain", TBool),
-      CM(   0x08, "mix_parallel", TBool),
-      CM(   0x09, "channel", TBool),
-      CM(   0x0a, "kbd_patch_channel", TBool),
-      CM(   0x0b, "reserved_1", TBool),
-      CMA(  0x0c, "scale", scale_map),
-      CMAO(       "control_source",
-        CM( 0x18, "1", TEnum),
-        CM( 0x19, "2", TEnum),
-        CM( 0x1a, "3", TEnum),
-        CM( 0x1b, "4", TEnum),
-      ),
-      CMAO(       "rx",
-        CM( 0x1c, "pc", TByte),
-        CM( 0x1d, "bank", TByte),
-      ),
-    ),
-    CMA(0x004000, "controller",
-      CMAO(       "tx",
-        CM( 0x00, "pc", TByte),
-        CM( 0x01, "bank", TByte),
-      ),
-      CM(   0x02, "velocity", TByte),
-      CM(   0x03, "velocity_curve", TEnum),
-      CM(   0x04, "reserved_1"),
-      CM(   0x05, "hold_polarity", TBool),
-      CM(   0x06, "continuous_hold", TBool),
-      CMAO(       "control_pedal",
-        CM( 0x07, "assign", TEnum),
-        CM( 0x08, "polarity", TEnum),
-      ),
-      CM(   0x09, "reserved_2"),
-      CMAO(       "knob_assign",
-        CM( 0x10, "1", TByte),
-        CM( 0x11, "2", TByte),
-        CM( 0x12, "3", TByte),
-        CM( 0x13, "4", TByte),
-      ),
-      CM(   0x14, "reserved_2"),
-      CM(   0x4d, "reserved_3"),
-    ),
-  ),
-  CMA(  0x10000000,"temporary",
-    CMA(0x00000000,"performance_pattern", performance_pattern),
+  CMA(    0x01000000, "setup", setup),
+  CMA(    0x02000000, "system", system),
+  CMA(    0x10000000, "temporary",
+    CMA(  0x00000000, "performance_pattern", performance_pattern),
     CMA(  0x01000000, "performance_part",
       CMA(0x00000000,  "1", patch_drum), # Temporary Patch/Drum (Performance Mode Part 1)
       CMA(0x00200000,  "2", patch_drum),
@@ -881,7 +835,7 @@ let juno_map = CMAO("",
       CMA(0x03400000, "15", patch_drum),
       CMA(0x03600000, "16", patch_drum),
     ),
-    CMA(  0x0e000000, "rhythm_pattern",
+    CMA(  0x0e000000, "rhythm_pattern", # TODO
     ),
     CMA(  0x0e110000, "arpeggio", arpeggio),
     CMA(  0x0e130000, "rhythm_group", rhythm_group),
@@ -892,9 +846,9 @@ let juno_map = CMAO("",
     ),
   ),
   CMA(  0x20000000, "user",
-    CMA(0x00000000, "performance", performance_patterns(128)),
-    CMA(0x01000000, "pattern", performance_patterns(128)),
-    CMA(0x10000000, "patch", patches(256)),
+    CMA(0x00000000, "performance", performance_patterns),
+    CMA(0x01000000, "pattern"    , performance_patterns),
+    CMA(0x10000000, "patch"      , performance_patches),
     CMA(0x20000000, "drum_kit", # 1 .. 8
       CMA(0x000000, "1", drum_kit),
       CMA(0x100000, "2", drum_kit),
@@ -905,22 +859,24 @@ let juno_map = CMAO("",
       CMA(0x600000, "7", drum_kit),
       CMA(0x700000, "8", drum_kit),
     ),
-    CMA(0x40000000, "vocal_effect", vocal_effects(20)),
+    CMA(0x40000000, "vocal_effect", vocal_effects),
   ),
 )
 
 proc traverse(mem: Mem, offset: JAddr, path: seq[string]) =
   let level = path.len
   var a = offset
+  var hidden = mem.kind == TNone or mem.offset == NOFF
   if mem.offset != NOFF:
     a += mem.offset
+  if not hidden:
     stdout.write "0x", a.toHex(8).toLower(), " "
 
   var desc = (path & mem.name).join(".")
   if desc.len > 0:
     desc = desc[1..^1]
 
-  if mem.offset != NOFF:
+  if not hidden:
     stdout.write desc
     stdout.write "\n"
   for area in mem.area:
