@@ -812,31 +812,31 @@ let system = @[
 let performance_patterns = performance_pattern.repeat(128, 0x010000)
 let performance_patches = patch.repeat(256, 0x10000)
 let vocal_effects = vocal_effect.repeat(20, 0x100)
+let drum_kits = drum_kit.repeat(8, 0x100000)
 let juno_map = CMAO("",
   CMA(    0x01000000, "setup", setup),
   CMA(    0x02000000, "system", system),
   CMA(    0x10000000, "temporary",
     CMA(  0x00000000, "performance_pattern", performance_pattern),
-    CMA(  0x01000000, "performance_part",
-      CMA(0x00000000,  "1", patch_drum), # Temporary Patch/Drum (Performance Mode Part 1)
-      CMA(0x00200000,  "2", patch_drum),
-      CMA(0x00400000,  "3", patch_drum),
-      CMA(0x00600000,  "4", patch_drum),
-      CMA(0x01000000,  "5", patch_drum),
-      CMA(0x01200000,  "6", patch_drum),
-      CMA(0x01400000,  "7", patch_drum),
-      CMA(0x01600000,  "8", patch_drum),
-      CMA(0x02000000,  "9", patch_drum),
-      CMA(0x02200000, "10", patch_drum),
-      CMA(0x02400000, "11", patch_drum),
-      CMA(0x02600000, "12", patch_drum),
-      CMA(0x03000000, "13", patch_drum),
-      CMA(0x03200000, "14", patch_drum),
-      CMA(0x03400000, "15", patch_drum),
-      CMA(0x03600000, "16", patch_drum),
+    CMAO("performance_part",
+      CMA(0x01000000,  "1", patch_drum), # Temporary Patch/Drum (Performance Mode Part 1)
+      CMA(0x01200000,  "2", patch_drum),
+      CMA(0x01400000,  "3", patch_drum),
+      CMA(0x01600000,  "4", patch_drum),
+      CMA(0x02000000,  "5", patch_drum),
+      CMA(0x02200000,  "6", patch_drum),
+      CMA(0x02400000,  "7", patch_drum),
+      CMA(0x02600000,  "8", patch_drum),
+      CMA(0x03000000,  "9", patch_drum),
+      CMA(0x03200000, "10", patch_drum),
+      CMA(0x03400000, "11", patch_drum),
+      CMA(0x03600000, "12", patch_drum),
+      CMA(0x04000000, "13", patch_drum),
+      CMA(0x04200000, "14", patch_drum),
+      CMA(0x04400000, "15", patch_drum),
+      CMA(0x04600000, "16", patch_drum),
     ),
-    CMA(  0x0e000000, "rhythm_pattern", # TODO
-    ),
+    CMA(  0x0e000000, "rhythm_pattern", arpeggio),
     CMA(  0x0e110000, "arpeggio", arpeggio),
     CMA(  0x0e130000, "rhythm_group", rhythm_group),
     CMA(  0x0e150000, "vocal_effect", vocal_effect),
@@ -849,16 +849,7 @@ let juno_map = CMAO("",
     CMA(0x00000000, "performance", performance_patterns),
     CMA(0x01000000, "pattern"    , performance_patterns),
     CMA(0x10000000, "patch"      , performance_patches),
-    CMA(0x20000000, "drum_kit", # 1 .. 8
-      CMA(0x000000, "1", drum_kit),
-      CMA(0x100000, "2", drum_kit),
-      CMA(0x200000, "3", drum_kit),
-      CMA(0x300000, "4", drum_kit),
-      CMA(0x400000, "5", drum_kit),
-      CMA(0x500000, "6", drum_kit),
-      CMA(0x600000, "7", drum_kit),
-      CMA(0x700000, "8", drum_kit),
-    ),
+    CMA(0x20000000, "drum_kit", drum_kits),
     CMA(0x40000000, "vocal_effect", vocal_effects),
   ),
 )
@@ -882,7 +873,174 @@ proc traverse(mem: Mem, offset: JAddr, path: seq[string]) =
   for area in mem.area:
     traverse(area, a, path & mem.name)
 
+
+import std/terminal
+type
+  State = ref object
+  Nteract* = ref object
+    prompt: string
+    cmdline: string
+    selected: int
+    pos: int
+    path: seq[string]
+    coords: seq[int]
+    map: Mem
+    areas: seq[MemArea]
+
+
+proc draw(nt: Nteract) =
+  stdout.write("\r\27[2K")
+  stdout.write("\27[34;1m")
+  stdout.write(nt.prompt)
+  stdout.write("\27[0m")
+
+  #stdout.write "\27[?25l\27[0K"
+  stdout.write nt.cmdline
+
+  let remlen = nt.cmdline.len - nt.pos
+  #for c in [nt.pos .. nt.cmdline.len - 1]:
+  #  stdout.write(nt.cmdline[c])
+  if remlen > 0:
+    stdout.write("\27[" & $remlen & "D")
+  #stdout.write "\27[?25h"
+
+proc clear(nt: Nteract) =
+  nt.pos = 0
+  nt.cmdline = ""
+  nt.draw()
+  stdout.flushFile()
+
+proc get_offset(nt: Nteract): JAddr =
+  var area = nt.areas[0][nt.coords[0]]
+  for i in nt.coords[1..^1]:
+    if area.offset != NOFF:
+      result += area.offset
+    if area.area.len() > 0:
+      area = area.area[i]
+  if area.offset != NOFF:
+    result += area.offset
+
+proc set_cmdline(nt: Nteract) =
+  discard nt.coords.pop()
+  discard nt.path.pop()
+  nt.path.add( nt.areas[^1][nt.selected].name )
+  nt.coords.add( nt.selected )
+  nt.cmdline = nt.path[1..^1].join(".")
+  nt.pos = nt.cmdline.len() - nt.path[^1].len()
+  #echo nt.coords
+  nt.prompt = "0x" & nt.get_offset().toHex(8) & "> "
+
+proc bs(nt: Nteract) =
+  discard
+
+proc up(nt: Nteract) =
+  if nt.selected - 1 >= 0:
+    nt.selected -= 1
+    nt.set_cmdline()
+    nt.draw()
+
+proc down(nt: Nteract) =
+  if nt.selected + 1 < nt.areas[^1].len:
+    nt.selected += 1
+    nt.set_cmdline()
+    nt.draw()
+
+proc left(nt: Nteract) =
+  if nt.coords.len() <= 1:
+    return
+  discard nt.coords.pop()
+  discard nt.areas.pop()
+  discard nt.path.pop()
+  nt.selected = nt.coords[^1]
+  nt.set_cmdline()
+  nt.draw()
+  #echo $nt.coords
+
+proc right(nt: Nteract) =
+  if nt.areas[^1][nt.selected].area.len() == 0:
+    return
+  nt.coords.add(nt.selected)
+  nt.path.add( nt.areas[^1][nt.selected].name )
+  nt.areas.add( nt.areas[^1][nt.selected].area )
+  nt.selected = 0
+  nt.set_cmdline()
+  nt.draw()
+  #echo $nt.coords
+
+
+#proc insert(nt: Nteract, k: string) =
+#  nt.cmdline.insert($k, nt.pos)
+#  nt.pos += 1
+#  stdout.write(k)
+#  if nt.pos < nt.cmdline.len:
+#    nt.draw()
+
+#proc bs(nt: Nteract) =
+#  if nt.pos == 0 or nt.cmdline.len == 0:
+#    return
+#  cursorBackward()
+#  stdout.write(" ")
+#  cursorBackward()
+#  if nt.pos == nt.cmdline.len:
+#    nt.cmdline = nt.cmdline[0 .. nt.pos - 2]
+#    nt.pos -= 1
+#  else:
+#    nt.cmdline = nt.cmdline[0 .. nt.pos - 2] & nt.cmdline[ nt.pos .. ^1 ]
+#    nt.pos -= 1
+#    nt.draw()
+
+proc getUserInput*(nt: Nteract): string =
+  nt.set_cmdline()
+  nt.draw()
+  var first = true
+  while true:
+    let k = getch()
+    case k
+    of '\3':
+      echo "^C"
+      quit 127
+    of '\7', '\127':
+      if first:
+        nt.clear()
+      else:
+        nt.bs()
+    of '\10', '\13':
+      echo ""
+      return nt.cmdline
+    of '\27':
+      case getch()
+      of '[':
+        case getch()
+        of 'A': nt.up()
+        of 'B': nt.down()
+        of 'C': nt.right()
+        of 'D': nt.left()
+        #of '3':
+        #  case getch()
+        #  of '~': nt.fwdel()
+        #  else: discard
+        else: discard
+      else: discard
+    else:
+      discard
+      #nt.insert($k)
+    first = false
+
 when isMainModule:
+  let nt = Nteract(
+    prompt: "0x00000000> ",
+    cmdline: "",
+    pos: 0,
+    selected: 0,
+    path: @["", "setup"],
+    map: juno_map,
+    areas: @[juno_map.area],
+    coords: @[0],
+  )
+  #for area in nt.areas[^1]:
+  #  echo area.name
+  let input = nt.getUserInput()
+  echo input
   #echo "hello"
-  traverse(juno_map, 0, @[])
+  #traverse(juno_map, 0, @[])
 
