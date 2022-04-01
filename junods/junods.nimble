@@ -5,7 +5,7 @@ author        = "Casey Tucker"
 description   = "nim MIDI implementation for Roland JUNO-DS"
 license       = "MIT"
 srcDir        = "src"
-bin           = @["junods"]
+bin           = @["junods", "cds"]
 
 
 # Dependencies

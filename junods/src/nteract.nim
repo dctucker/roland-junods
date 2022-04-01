@@ -1,35 +1,15 @@
 import std/terminal
-import strutils
-
-import cache
-import memorymap
 
 type
   State = ref object
   Nteract* = ref object of RootObj
-    prompt: string
-    cmdline: string
-    pathsep: string
-    selected: int
-    pos: int
-    path: seq[string]
-    coords: seq[int]
-  JunoNteract* = ref object of Nteract
-    map: Mem
-    areas: seq[MemArea]
-
-proc newJunoNteract*(): JunoNteract =
-  JunoNteract(
-    prompt: "0x00000000> ",
-    cmdline: "",
-    pathsep: ".",
-    pos: 0,
-    selected: 0,
-    path: @["", "setup"],
-    map: juno_map,
-    areas: @[juno_map.area],
-    coords: @[0],
-  )
+    prompt*: string
+    cmdline*: string
+    pathsep*: string
+    selected*: int
+    pos*: int
+    path*: seq[string]
+    coords*: seq[int]
 
 method draw(nt: Nteract) {.base.} =
   stdout.write("\r\27[2K")
@@ -53,70 +33,20 @@ method clear(nt: Nteract) {.base.} =
   nt.draw()
   stdout.flushFile()
 
-proc get_kind(nt: JunoNteract): Kind =
-  return nt.areas[^1][nt.selected].kind
-
-proc get_offset(nt: JunoNteract): JAddr =
-  var area = nt.areas[0][nt.coords[0]]
-  for i in nt.coords[1..^1]:
-    if area.offset != NOFF:
-      result += area.offset
-    if area.area.len() > 0:
-      area = area.area[i]
-  if area.offset != NOFF:
-    result += area.offset
-
 method update_selected*(nt: Nteract, sel: string) {.base.} =
+  #echo nt.coords
   discard nt.coords.pop()
   discard nt.path.pop()
   nt.path.add(sel)
   nt.coords.add( nt.selected )
 
-
-method set_cmdline(nt: Nteract) {.base.} =
-  discard
-
-method set_cmdline(nt: JunoNteract) =
-  let mem = nt.areas[^1][nt.selected]
-  nt.Nteract.update_selected( mem.name )
-  nt.cmdline = nt.path[1..^1].join(nt.pathsep)
-  #nt.pos = nt.cmdline.len() - nt.path[^1].len()
-  #echo nt.coords
-  nt.prompt = nt.get_offset().format() & "> "
-
-  case mem.kind
-  of TNone:
-    nt.pos = nt.cmdline.len()
-    nt.cmdline &= "."
-  of TEnum:
-    let value = cache_get(nt.get_offset(), nt.get_kind())[0]
-    nt.pos = nt.cmdline.len()
-    nt.cmdline &= " = " & $mem.kind & "(" & mem.values[value] & ")"
-  of TName, TName16:
-    let value = cache_get(nt.get_offset(), nt.get_kind())
-    nt.pos = nt.cmdline.len()
-    nt.cmdline &= " = " & $mem.kind & "("
-    for c in value:
-      if c >= 32 and c <= 127:
-        nt.cmdline &= c.char
-    nt.cmdline &= ")"
-  else:
-    let value = cache_get(nt.get_offset(), nt.get_kind())
-    nt.pos = nt.cmdline.len()
-    nt.cmdline &= " = " & $mem.kind & "(" & $mem.value(value) & ")"
-
-
+method set_cmdline(nt: Nteract) {.base.} = discard
 method current_len(nt: Nteract): int {.base.} = 0
-method current_len(nt: JunoNteract): int =
-  nt.areas[^1].len()
-
 method next_len(nt: Nteract): int {.base.} = 0
-method next_len(nt: JunoNteract): int =
-  nt.areas[^1][nt.selected].area.len()
+method pop_path(nt: Nteract) {.base.} = discard
+method push_path(nt: Nteract) {.base.} = discard
 
-method bs(nt: Nteract) {.base.} =
-  discard
-
+method bs(nt: Nteract) {.base.} = discard
 method up(nt: Nteract) {.base.} =
   if nt.selected - 1 >= 0:
     nt.selected -= 1
@@ -128,18 +58,6 @@ method down(nt: Nteract) {.base.} =
     nt.selected += 1
     nt.set_cmdline()
     nt.draw()
-
-method pop_path(nt: Nteract) {.base.} = discard
-method pop_path(nt: JunoNteract) =
-  discard nt.coords.pop()
-  discard nt.areas.pop()
-  discard nt.path.pop()
-
-method push_path(nt: Nteract) {.base.} = discard
-method push_path(nt: JunoNteract) =
-  nt.coords.add(nt.selected)
-  nt.path.add( nt.areas[^1][nt.selected].name )
-  nt.areas.add( nt.areas[^1][nt.selected].area )
 
 method left(nt: Nteract) {.base.} =
   if nt.coords.len() <= 1:
@@ -160,14 +78,14 @@ method right(nt: Nteract) {.base.} =
   #echo $nt.coords
 
 
-#proc insert(nt: Nteract, k: string) =
+#method insert(nt: Nteract, k: string) {.base.} =
 #  nt.cmdline.insert($k, nt.pos)
 #  nt.pos += 1
 #  stdout.write(k)
 #  if nt.pos < nt.cmdline.len:
 #    nt.draw()
 
-#proc bs(nt: Nteract) =
+#method bs(nt: Nteract) {.base.} =
 #  if nt.pos == 0 or nt.cmdline.len == 0:
 #    return
 #  cursorBackward()
