@@ -66,33 +66,34 @@ proc get_offset(nt: Nteract): JAddr =
 proc set_cmdline(nt: Nteract) =
   discard nt.coords.pop()
   discard nt.path.pop()
-  let area = nt.areas[^1][nt.selected]
-  nt.path.add( area.name )
+  let mem = nt.areas[^1][nt.selected]
+  nt.path.add( mem.name )
   nt.coords.add( nt.selected )
   nt.cmdline = nt.path[1..^1].join(".")
   #nt.pos = nt.cmdline.len() - nt.path[^1].len()
   #echo nt.coords
   nt.prompt = nt.get_offset().format() & "> "
 
-  case area.kind
+  case mem.kind
   of TNone:
     nt.pos = nt.cmdline.len()
     nt.cmdline &= "."
   of TEnum:
     let value = cache_get(nt.get_offset(), nt.get_kind())[0]
     nt.pos = nt.cmdline.len()
-    nt.cmdline &= " = " & $area.kind & "(" & area.values[value] & ")"
+    nt.cmdline &= " = " & $mem.kind & "(" & mem.values[value] & ")"
   of TName, TName16:
     let value = cache_get(nt.get_offset(), nt.get_kind())
     nt.pos = nt.cmdline.len()
-    nt.cmdline &= " = " & $area.kind & "("
+    nt.cmdline &= " = " & $mem.kind & "("
     for c in value:
-      nt.cmdline &= c.char
+      if c >= 32 and c <= 127:
+        nt.cmdline &= c.char
     nt.cmdline &= ")"
   else:
     let value = cache_get(nt.get_offset(), nt.get_kind())
     nt.pos = nt.cmdline.len()
-    nt.cmdline &= " = " & $area.kind & "(" & value.join(",") & ")"
+    nt.cmdline &= " = " & $mem.kind & "(" & $mem.value(value) & ")"
 
 proc bs(nt: Nteract) =
   discard

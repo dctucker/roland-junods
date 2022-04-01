@@ -37,6 +37,21 @@ proc normalize*(offset: JAddr): JAddr =
   let n0: JAddr = (offset and 0x0000007f) or ((offset and 0x00000080) shl 1)
   return (n3 or n2 or n1 or n0) and 0x7f7f7f7f
 
+proc value*(mem: Mem, b: seq[byte]): int =
+  case mem.kind
+  of TByte:   result = b[0].int and 0x7f
+  of TNibble: result = b[0].int and 0x0f
+  of TNibblePair:
+    result = ((b[1].int and 0x0f00) shl 4) or
+              (b[0].int and 0x000f)
+  of TNibbleQuad:
+    result = ((b[3].int and 0x0f0000) shl 12) or
+             ((b[2].int and 0x000f00) shl  8) or
+             ((b[1].int and 0x000f00) shl  4) or
+              (b[0].int and 0x00000f)
+  else:
+    result = b[0].int
+
 proc format*(a: JAddr): string =
   return "0x" & a.toHex(8).toLower()
 
@@ -142,7 +157,7 @@ let chorus = @[
   CMA(0x04, "parameter", parameters_20),
 ]
 let reverb = @[
-  CM( 0x00, "type" , TEnum, 0, 5),
+  CM( 0x00, "type" , TByte, 0, 5),
   CM( 0x01, "level", TByte, 0, 127),
   CM( 0x02, "output_assign", TEnum, output_assign_values),
   CMA(0x03, "parameter", parameters_20),
