@@ -58,14 +58,14 @@ proc format*(a: JAddr): string =
 proc `+=`*(n1: var JAddr, n2: JAddr) =
   n1 = normalize(n1 + n2)
 
-proc CM(offset: JAddr, name: string, kind: Kind = TNone, values: seq[string] = @[]): Mem =
+proc CM*(offset: JAddr, name: string, kind: Kind = TNone, values: seq[string] = @[]): Mem =
   case kind
   of TEnum:
     Mem(offset: normalize(offset), name: name, kind: kind, values: values)
   else:
     Mem(offset: normalize(offset), name: name, kind: kind)
 
-proc CM(offset: JAddr, name: string, kind: Kind = TNone, low, high: int): Mem =
+proc CM*(offset: JAddr, name: string, kind: Kind = TNone, low, high: int): Mem =
   case kind
   of TByte, TNibble, TNibblePair, TNibbleQuad:
     Mem(offset: normalize(offset), name: name, kind: kind, low: low, high: high)
@@ -73,18 +73,18 @@ proc CM(offset: JAddr, name: string, kind: Kind = TNone, low, high: int): Mem =
     Mem(offset: normalize(offset), name: name, kind: kind)
 
 
-proc CMA(offset: JAddr, name: string, area: varargs[Mem]): Mem =
+proc CMA*(offset: JAddr, name: string, area: varargs[Mem]): Mem =
   Mem(offset: normalize(offset), name: name, area: @area)
 
-proc CMAO(name: string, area: varargs[Mem]): Mem =
+proc CMAO*(name: string, area: varargs[Mem]): Mem =
   CMA(NOFF, name, area)
 
-proc repeat(thing: MemArea, n, span: int): seq[Mem] =
+proc repeat*(thing: MemArea, n, span: int): seq[Mem] =
   result = newSeqOfCap[Mem](n)
   for i in 0..<n:
     result.add(CMA(JAddr(span * i), $(i + 1), thing))
 
-proc repeat(thing: Mem, n, span: int): seq[Mem] =
+proc repeat*(thing: Mem, n, span: int): seq[Mem] =
   result = newSeqOfCap[Mem](n)
   for i in 0..<n:
     case thing.kind
@@ -95,7 +95,7 @@ proc repeat(thing: Mem, n, span: int): seq[Mem] =
     else:
       result.add( CM(JAddr(span * i), $(i + 1), thing.kind) )
 
-proc repeat(kind: Kind, n, span: int): seq[Mem] =
+proc repeat*(kind: Kind, n, span: int): seq[Mem] =
   result = newSeqOfCap[Mem](n)
   for i in 0..<n:
     result.add(CM(JAddr(span * i), $(i + 1), kind))

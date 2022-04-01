@@ -4,44 +4,67 @@ import strutils
 import nteract
 
 type
-  DirNteract* = ref object of Nteract
-    list*: seq[string]
-    lists: seq[seq[string]]
+  Kind = enum
+    KNone,
+    KDir,
+    KFile
 
+type
+  Entry* = object
+    name: string
+    kind: Kind
+    can_exec: bool
+
+  DirNteract* = ref object of Nteract
+    list*: seq[Entry]
+    lists: seq[seq[Entry]]
+
+proc set_dir*(nt: DirNteract, pathstr: string)
 proc newDirNteract*(): DirNteract =
-  let path = getCurrentDir().split(DirSep)
   result = DirNteract(
     prompt: "",
     cmdline: "",
     pathsep: "" & DirSep,
-    path: path,
     coords: @[0],
   )
+  result.set_dir(getCurrentDir())
+
+proc get_selected(nt: DirNteract): Entry =
+  if nt.selected >= nt.list.len():
+    Entry()
+  else:
+    nt.list[nt.selected]
+
+proc set_dir*(nt: DirNteract, pathstr: string) =
+  nt.path = pathstr.split(DirSep)
+  nt.coords = @[]
+  nt.lists = @[]
+  nt.list = @[]
 
   var i = 0
-  var search = result.path[1]
+  var search = nt.path[1]
   for p in getCurrentDir().parentDirs(fromRoot=true):
-    #echo "path: " & p
-    #echo "searching for " & search
-    result.list = @[]
+    nt.list = @[]
     var j = 0
-    for dir in walkDirs(p & result.pathsep & "*"):
+    for dir in walkDirs(p & nt.pathsep & "*"):
       let name = dir.lastPathPart()
-      #echo name
-      result.list.add(name)
+      nt.list.add(Entry(name: name, kind: KDir))
       if name == search:
-        result.coords.add(j)
+        nt.coords.add(j)
       j += 1
-    result.lists.add(result.list)
+    for file in walkFiles(p & nt.pathsep & "*"):
+      let name = file.lastPathPart()
+      nt.list.add(Entry(name: name, kind: KFile))
+    nt.lists.add(nt.list)
     i += 1
-    if i < result.path.len() - 1:
-      search = result.path[i+1]
-  result.coords.add(0)
-  let sel = if result.list.len() > 0:
-    result.list[result.selected]
+    if i < nt.path.len() - 1:
+      search = nt.path[i+1]
+  nt.coords.add(0)
+  let sel = if nt.list.len() > 0:
+    nt.get_selected().name
   else:
     ""
-  result.path.add(sel)
+  nt.path.add(sel)
 
 proc load_list(nt: DirNteract) =
   let cd = nt.path.join(nt.pathsep)
@@ -49,7 +72,9 @@ proc load_list(nt: DirNteract) =
   setCurrentDir(cd)
   nt.list = @[]
   for dir in walkDirs("*"):
-    nt.list.add(dir)
+    nt.list.add(Entry(name: dir, kind: KDir))
+  for file in walkFiles("*"):
+    nt.list.add(Entry(name: file, kind: KFile))
   #echo nt.list
 
 method set_cmdline*(nt: DirNteract) =
@@ -59,35 +84,39 @@ method set_cmdline*(nt: DirNteract) =
   #echo nt.list
   #echo nt.selected
   if nt.list.len() > 0:
-    let sel = nt.list[nt.selected]
+    let sel = nt.get_selected().name
     nt.update_selected(sel)
   else:
     nt.update_selected("")
   nt.cmdline = nt.path.join(nt.pathsep) #& nt.pathsep & sel
   nt.pos = nt.cmdline.len()
+  if nt.get_selected().kind == KDir:
+    nt.cmdline &= "/"
 
 method current_len(nt: DirNteract): int =
   nt.list.len()
 
 method next_len(nt: DirNteract): int =
-  1
+  if nt.get_selected().kind == KDir: 1
+  else: 0
 
 method push_path(nt: DirNteract) =
   nt.selected = 0
   nt.load_list()
   nt.coords.add(nt.selected)
   if nt.list.len() > 0:
-    nt.path.add(nt.list[nt.selected])
+    nt.path.add(nt.get_selected().name)
   else:
     nt.path.add("")
   nt.lists.add(nt.list)
 
 method pop_path(nt: DirNteract) =
-  discard nt.coords.pop()
-  discard nt.path.pop()
-  discard nt.lists.pop()
-  nt.list = nt.lists[^1]
-  nt.selected = nt.coords[^1]
+  if nt.lists.len() > 1:
+    discard nt.coords.pop()
+    discard nt.path.pop()
+    discard nt.lists.pop()
+    nt.list = nt.lists[^1]
+    nt.selected = nt.coords[^1]
 
 when isMainModule:
   #setCurrentDir("/")

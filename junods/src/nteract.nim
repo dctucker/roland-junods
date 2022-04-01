@@ -26,6 +26,7 @@ method draw(nt: Nteract) {.base.} =
   if remlen > 0:
     stdout.write("\27[" & $remlen & "D")
   #stdout.write "\27[?25h"
+  stdout.flushFile()
 
 method clear(nt: Nteract) {.base.} =
   nt.pos = 0
