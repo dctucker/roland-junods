@@ -22,7 +22,7 @@ import cache
 
 when isMainModule:
   initCache()
-  let nt = newNteract()
+  let nt = newJunoNteract()
   #for area in nt.areas[^1]:
   #  echo area.name
   let input = nt.getUserInput()

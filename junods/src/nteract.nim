@@ -6,20 +6,23 @@ import memorymap
 
 type
   State = ref object
-  Nteract* = ref object
+  Nteract* = ref object of RootObj
     prompt: string
     cmdline: string
+    pathsep: string
     selected: int
     pos: int
     path: seq[string]
     coords: seq[int]
+  JunoNteract* = ref object of Nteract
     map: Mem
     areas: seq[MemArea]
 
-proc newNteract*(): Nteract =
-  Nteract(
+proc newJunoNteract*(): JunoNteract =
+  JunoNteract(
     prompt: "0x00000000> ",
     cmdline: "",
+    pathsep: ".",
     pos: 0,
     selected: 0,
     path: @["", "setup"],
@@ -28,7 +31,7 @@ proc newNteract*(): Nteract =
     coords: @[0],
   )
 
-proc draw(nt: Nteract) =
+method draw(nt: Nteract) {.base.} =
   stdout.write("\r\27[2K")
   stdout.write("\27[34;1m")
   stdout.write(nt.prompt)
@@ -44,16 +47,16 @@ proc draw(nt: Nteract) =
     stdout.write("\27[" & $remlen & "D")
   #stdout.write "\27[?25h"
 
-proc clear(nt: Nteract) =
+method clear(nt: Nteract) {.base.} =
   nt.pos = 0
   nt.cmdline = ""
   nt.draw()
   stdout.flushFile()
 
-proc get_kind(nt: Nteract): Kind =
+proc get_kind(nt: JunoNteract): Kind =
   return nt.areas[^1][nt.selected].kind
 
-proc get_offset(nt: Nteract): JAddr =
+proc get_offset(nt: JunoNteract): JAddr =
   var area = nt.areas[0][nt.coords[0]]
   for i in nt.coords[1..^1]:
     if area.offset != NOFF:
@@ -63,13 +66,20 @@ proc get_offset(nt: Nteract): JAddr =
   if area.offset != NOFF:
     result += area.offset
 
-proc set_cmdline(nt: Nteract) =
+method update_selected*(nt: Nteract, sel: string) {.base.} =
   discard nt.coords.pop()
   discard nt.path.pop()
-  let mem = nt.areas[^1][nt.selected]
-  nt.path.add( mem.name )
+  nt.path.add(sel)
   nt.coords.add( nt.selected )
-  nt.cmdline = nt.path[1..^1].join(".")
+
+
+method set_cmdline(nt: Nteract) {.base.} =
+  discard
+
+method set_cmdline(nt: JunoNteract) =
+  let mem = nt.areas[^1][nt.selected]
+  nt.Nteract.update_selected( mem.name )
+  nt.cmdline = nt.path[1..^1].join(nt.pathsep)
   #nt.pos = nt.cmdline.len() - nt.path[^1].len()
   #echo nt.coords
   nt.prompt = nt.get_offset().format() & "> "
@@ -95,38 +105,55 @@ proc set_cmdline(nt: Nteract) =
     nt.pos = nt.cmdline.len()
     nt.cmdline &= " = " & $mem.kind & "(" & $mem.value(value) & ")"
 
-proc bs(nt: Nteract) =
+
+method current_len(nt: Nteract): int {.base.} = 0
+method current_len(nt: JunoNteract): int =
+  nt.areas[^1].len()
+
+method next_len(nt: Nteract): int {.base.} = 0
+method next_len(nt: JunoNteract): int =
+  nt.areas[^1][nt.selected].area.len()
+
+method bs(nt: Nteract) {.base.} =
   discard
 
-proc up(nt: Nteract) =
+method up(nt: Nteract) {.base.} =
   if nt.selected - 1 >= 0:
     nt.selected -= 1
     nt.set_cmdline()
     nt.draw()
 
-proc down(nt: Nteract) =
-  if nt.selected + 1 < nt.areas[^1].len:
+method down(nt: Nteract) {.base.} =
+  if nt.selected + 1 < nt.current_len():
     nt.selected += 1
     nt.set_cmdline()
     nt.draw()
 
-proc left(nt: Nteract) =
-  if nt.coords.len() <= 1:
-    return
+method pop_path(nt: Nteract) {.base.} = discard
+method pop_path(nt: JunoNteract) =
   discard nt.coords.pop()
   discard nt.areas.pop()
   discard nt.path.pop()
+
+method push_path(nt: Nteract) {.base.} = discard
+method push_path(nt: JunoNteract) =
+  nt.coords.add(nt.selected)
+  nt.path.add( nt.areas[^1][nt.selected].name )
+  nt.areas.add( nt.areas[^1][nt.selected].area )
+
+method left(nt: Nteract) {.base.} =
+  if nt.coords.len() <= 1:
+    return
+  nt.pop_path()
   nt.selected = nt.coords[^1]
   nt.set_cmdline()
   nt.draw()
   #echo $nt.coords
 
-proc right(nt: Nteract) =
-  if nt.areas[^1][nt.selected].area.len() == 0:
+method right(nt: Nteract) {.base.} =
+  if nt.next_len() == 0:
     return
-  nt.coords.add(nt.selected)
-  nt.path.add( nt.areas[^1][nt.selected].name )
-  nt.areas.add( nt.areas[^1][nt.selected].area )
+  nt.push_path()
   nt.selected = 0
   nt.set_cmdline()
   nt.draw()
@@ -154,7 +181,7 @@ proc right(nt: Nteract) =
 #    nt.pos -= 1
 #    nt.draw()
 
-proc getUserInput*(nt: Nteract): string =
+method getUserInput*(nt: Nteract): string {.base.} =
   nt.set_cmdline()
   nt.draw()
   var first = true
