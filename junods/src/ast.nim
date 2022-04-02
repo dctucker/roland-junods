@@ -36,53 +36,57 @@ dumpTree:
 #    0x40000000 drum_kit:     drum_kits
 #    0x60000000 vocal_effect: vocal_effects
 
-proc diveMap(input: NimNode): NimNode =
-  result = quote do:
-    []
+proc diveMap(input: NimNode): seq[NimNode] =
+  result = @[]
   #echo input.kind
   case input.kind
   of nnkStmtList:
     if input.len() == 1 and input[0].kind == nnkStmtList:
-      result = input[0]
+      result.add input[0]
     else:
       for stmt in input:
-        result.add( diveMap(stmt) )
+        for s in diveMap(stmt):
+          result.add s
   of nnkCommand:
     var offset: BiggestInt = -1
     if input[0].kind == nnkIntLit:
       offset = input[0].intVal()
     let name = input[1].strVal()
     if input.len() >= 3:
-      let areas = diveMap(input[2])
-      for area in areas:
+      for area in diveMap(input[2]):
         echo "area = " , area.treeRepr
-        if area.kind == nnkBracket:
-          for m in area:
-            result.add quote do:
-              Mem( offset: `offset`, name: `name`, area: `m`)
-        else:
+        case area.kind
+        of nnkBracket:
+          result.add quote do:
+            Mem( offset: `offset`, name: `name`, area: @`area`)
+        of nnkIdent, nnkPrefix:
           result.add quote do:
             Mem( offset: `offset`, name: `name`, area: `area`)
+        of nnkObjConstr:
+          result.add quote do:
+            Mem( offset: `offset`, name: `name`, area: @[`area`])
+        else:
+          echo "unexpected kind = " & area.treeRepr
     else:
-      result = quote do:
+      result.add quote do:
         Mem( offset: `offset`, name: `name`)
     #echo "name = " & name.repr
   of nnkCall:
     let name = newLit( $input[0].strVal() )
-    result = quote do:
+    result.add quote do:
       Mem( name: `name`, area: @[])
     input[0].expectKind(nnkIdent)
-    var stmtlist = diveMap(input[1])
-    if stmtlist.kind == nnkBracket:
-      for stmt in stmtlist:
-        result[^1][^1][^1].add(stmt)
-    else:
-      echo "stmtlist kind = " & $stmtlist.kind
-      result[^1][^1][^1].add(stmtlist)
+    for stmtlist in diveMap(input[1]):
+      if stmtlist.kind == nnkBracket:
+        for stmt in stmtlist:
+          result[^1][^1][^1][^1].add(stmt)
+      else:
+        echo "stmtlist kind = " & $stmtlist.kind
+        result[^1][^1][^1][^1].add(stmtlist)
   of nnkIdent:
-    result = input
+    result.add input
   else:
-    result = quote do:
+    result.add quote do:
       `input`
 
 macro genMap(statement: untyped): untyped =
@@ -90,23 +94,26 @@ macro genMap(statement: untyped): untyped =
   var bracket = quote do:
     []
   for sub in statement:
-    let dive = diveMap(sub)
-    if dive.kind == nnkBracket:
-      for d in dive:
-        bracket.add d
-    else:
-      bracket.add dive
+    for dive in diveMap(sub):
+      if dive.kind == nnkBracket:
+        for d in dive:
+          bracket.add d
+      else:
+        bracket.add dive
   result = quote do:
     @`bracket`
   echo "output ast = " & result.treeRepr
   echo result.repr
 
 let system: MemArea = @[]
+let performance_patterns: MemArea = @[]
 let performance_pattern: MemArea = @[]
 let performance_parts: MemArea = @[]
+let performance_patches: MemArea = @[]
 let arpeggio: MemArea = @[]
 let rhythm_group: MemArea = @[]
 let vocal_effect: MemArea = @[]
+let vocal_effects: MemArea = @[]
 let patch_drum: MemArea = @[]
 let drum_kits: MemArea = @[]
 
