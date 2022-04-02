@@ -124,7 +124,7 @@ proc generate_control_source_values(): seq[string] =
   result.add("BEND")
   result.add("AFT")
 
-let control_source_values = generate_control_source_values()
+let control_source_values* = generate_control_source_values()
 let mfx_control_source_values = control_source_values & @["SYS1","SYS2","SYS3","SYS4"]
 let matrix_control_source_values = mfx_control_source_values & @["VELOCITY","KEYFOLLOW","TEMPO","LFO1","LFO2","PIT-ENV","TVF-ENV","TVA-ENV"]
 let controls = @[
@@ -842,8 +842,8 @@ let setup = @[
   ),
 ]
 
-let polarity = @["STANDARD","REVERSE"]
-let pedal_assign_values = @[
+let polarity* = @["STANDARD","REVERSE"]
+let pedal_assign_values* = @[
   "MODULATION",
   "PORTA-TIME",
   "VOLUME",
@@ -870,7 +870,7 @@ let pedal_assign_values = @[
   "FAV-UP",
   "FAV-DOWN",
 ]
-let knob_assign_values = control_source_values & @[
+let knob_assign_values* = control_source_values & @[
   "EQ-LOW-FREQ",
   "EQ-LOW-GAIN",
   "EQ-MID-FREQ",
