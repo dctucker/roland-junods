@@ -125,8 +125,8 @@ proc generate_control_source_values(): seq[string] =
   result.add("AFT")
 
 let control_source_values* = generate_control_source_values()
-let mfx_control_source_values = control_source_values & @["SYS1","SYS2","SYS3","SYS4"]
-let matrix_control_source_values = mfx_control_source_values & @["VELOCITY","KEYFOLLOW","TEMPO","LFO1","LFO2","PIT-ENV","TVF-ENV","TVA-ENV"]
+let mfx_control_source_values* = control_source_values & @["SYS1","SYS2","SYS3","SYS4"]
+let matrix_control_source_values* = mfx_control_source_values & @["VELOCITY","KEYFOLLOW","TEMPO","LFO1","LFO2","PIT-ENV","TVF-ENV","TVA-ENV"]
 let controls = @[
   CM(0, "source", TEnum, mfx_control_source_values),
   CM(1, "sens"  , TByte, 1, 127), # -63 .. +63
@@ -135,9 +135,9 @@ let control = controls.repeat(4, 2) & @[
   CMA(8, "assign", Mem(kind: TByte, low: 0, high: 16).repeat(4,1))
 ]
 
-let parameters_20 = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(20, 4)
-let parameters_32 = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(32, 4)
-let output_assign_values = @["A","---","---","---"]
+let parameters_20* = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(20, 4)
+let parameters_32* = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(32, 4)
+let output_assign_values* = @["A","---","---","---"]
 
 let mfx = @[
   CM( 0x00, "type"       , TByte, 0, 80),
@@ -179,7 +179,7 @@ let midi_n = @[
   CM(0x0a, "phase_lock"        , TBool),
   CM(0x0b, "velocity_curve_type", TByte, 0, 4), # 0=OFF
 ]
-let off_on_patch = @["OFF","ON","PATCH"]
+let off_on_patch* = @["OFF","ON","PATCH"]
 
 let part_n = @[
   CM(0x00, "rx_channel", TNibble, 0, 15),
@@ -227,7 +227,7 @@ let zone_n = @[
   #CM(0x1a, "reserved_3"),
 ]
 
-let matrix_control_dest_values = @[
+let matrix_control_dest_values* = @[
   "OFF", "PCH", "CUT", "RES", "LEV", "PAN",
   "DRY", "CHO", "REV", "PIT-LFO1",
   "PIT-LFO2", "TVF-LFO1", "TVF-LFO2",
@@ -267,7 +267,7 @@ let tmt_n = @[
   CMA(1, "keyboard", keyboard_ranges),
   CMA(5, "velocity", velocity_ranges),
 ]
-let booster_values = @["0","+6","+12","+18"]
+let booster_values* = @["0","+6","+12","+18"]
 let tmt = @[
   CMAO("1-2",
     CM(0x00, "structure_type", TByte, 0, 9),
@@ -289,8 +289,8 @@ let tone_control_switches = @[
     Mem(kind: TEnum, values: @["OFF","ON","REVERSE"]).repeat(4, 1)
   ),
 ]
-let random_pitch_depth_values = @[ $0, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $20, $30, $40, $50, $60, $70, $80, $90, $100, $200, $300, $400, $500, $600, $600, $700, $800, $900, $1000, $1100, $1200 ]
-let tvf_filter_types = @["OFF","LPF","BPF","HPF","PKG","LPF2","LPF3"]
+let random_pitch_depth_values* = @[ $0, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $20, $30, $40, $50, $60, $70, $80, $90, $100, $200, $300, $400, $500, $600, $600, $700, $800, $900, $1000, $1100, $1200 ]
+let tvf_filter_types* = @["OFF","LPF","BPF","HPF","PKG","LPF2","LPF3"]
 
 let patch_tone_n = @[
   CM( 0x0000, "level", TByte, 0, 127),
@@ -612,7 +612,7 @@ proc generate_drum_tones(): MemArea =
     let k = 0x1000 + (0x200 * (i - 21))
     let a = ((k and 0x8000) shl 1) or (k and 0x7fff)
     result.add( CMA(JAddr(a), $i, drum_tone_n) )
-let drum_tones = generate_drum_tones()
+let drum_tones* = generate_drum_tones()
 
 let patch = @[
   CMAO("common",
@@ -714,11 +714,11 @@ let rhythm_group = @[
   #CM(0x72, "reserved_3"),
 ]
 
-let auto_pitch_key_values= @[
+let auto_pitch_key_values* = @[
   "C","Db","D","Eb","E","F","F#","G","Ab","A","Bb","B",
   "Cm","C#m","Dm","D#m","Em","Fm","F#m","Gm","G#m","A","Bbm","B",
 ]
-let auto_pitch_note_values = @["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
+let auto_pitch_note_values* = @["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
 let vocal_effect = @[
   CM(0x00, "name", TName),
   CM(0x0c, "type", TEnum, @["Vocoder","Auto-Pitch"]),
@@ -748,11 +748,11 @@ let vocal_effect = @[
   CM(0x22, "part_level", TByte, 0, 127),
 ]
 
-let source_values = @["PERFORM", $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16]
-let voice_reserves = Mem(kind: TByte, low: 0, high: 64).repeat(16, 1)
-let midis = midi_n.repeat(16, 0x100)
-let parts = part_n.repeat(16, 0x100)
-let zones = zone_n.repeat(16, 0x100)
+let source_values* = @["PERFORM", $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16]
+let voice_reserves* = Mem(kind: TByte, low: 0, high: 64).repeat(16, 1)
+let midis* = midi_n.repeat(16, 0x100)
+let parts* = part_n.repeat(16, 0x100)
+let zones* = zone_n.repeat(16, 0x100)
 let performance_pattern = @[
   CMAO("common",
     CM(  0x00, "name", TName),

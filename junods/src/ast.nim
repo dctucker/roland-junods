@@ -553,8 +553,17 @@ let patch_drum = genMap:
   0x00000000 patch: patch
   0x00100000 drum:  drum_kit
 
-let performance_patches = patch.repeat(256, 0x10000)
-let arpeggio: MemArea = @[]
+let arpeggio_steps = Mem(kind: TNibblePair, low: 0, high: 128).repeat(32, 2)
+let arpeggio_pattern = genMap:
+  0x0000 original_note  TByte
+  step:                 arpeggio_steps
+let arpeggio_patterns = arpeggio_pattern.repeat(16, 0x100)
+let arpeggio = genMap:
+  0x0000 end_step      TByte, 1, 32
+  0x0002 name          TName16
+  0x0012 reserved
+  0x1000 pattern_note: arpeggio_patterns
+
 let rhythm_group = genMap:
   0x00 name          TName16
   0x10 bank_msb      TByte, 0, 127
@@ -591,7 +600,7 @@ let vocal_effect = genMap:
     0x21 mic_hpf     TEnum, @["BYPASS", "1000", "1250", "1600", "2000", "2500", "3150", "4000", "5000", "6300", "8000", "10000", "12500", "16000"]
   0x22 part_level    TByte, 0, 127
 
-let vocal_effects: MemArea = @[]
+let vocal_effects = vocal_effect.repeat(20, 0x100)
 let drum_kits = drum_kit.repeat(8, 0x100000)
 
 let setup = genMap:
