@@ -59,49 +59,29 @@ proc format*(a: JAddr): string =
 proc `+=`*(n1: var JAddr, n2: JAddr) =
   n1 = normalize(n1 + n2)
 
-proc CM(offset: JAddr, name: string, kind: Kind = TNone, values: seq[string] = @[]): Mem =
-  case kind
-  of TEnum:
-    Mem(offset: normalize(offset), name: name, kind: kind, values: values)
-  else:
-    Mem(offset: normalize(offset), name: name, kind: kind)
-
-proc CM(offset: JAddr, name: string, kind: Kind = TNone, low, high: int): Mem =
-  case kind
-  of TByte, TNibble, TNibblePair, TNibbleQuad:
-    Mem(offset: normalize(offset), name: name, kind: kind, low: low, high: high)
-  else:
-    Mem(offset: normalize(offset), name: name, kind: kind)
-
-
-proc CMA(offset: JAddr, name: string, area: varargs[Mem]): Mem =
-  Mem(offset: normalize(offset), name: name, area: @area)
-
-proc CMAO(name: string, area: varargs[Mem]): Mem =
-  CMA(NOFF, name, area)
-
-proc repeat(thing: MemArea, n, span: int): seq[Mem] =
+proc repeat(thing: MemArea, n, span: int): seq[Mem] = # refactor into macro
   result = newSeqOfCap[Mem](n)
   for i in 0..<n:
-    result.add(CMA(JAddr(span * i), $(i + 1), thing))
+    result.add Mem( offset: JAddr(span * i), name: $(i + 1), area: thing)
 
-proc repeat(thing: Mem, n, span: int): seq[Mem] =
+proc repeat(thing: Mem, n, span: int): seq[Mem] = # refactor into macro
   result = newSeqOfCap[Mem](n)
   for i in 0..<n:
-    case thing.kind
+    let kind = thing.kind
+    case kind
     of TEnum:
-      result.add( CM(JAddr(span * i), $(i + 1), thing.kind, thing.values) )
+      result.add Mem( offset: JAddr(span * i), name: $(i + 1), kind: kind, values: thing.values)
     of TByte, TNibble, TNibblePair, TNibbleQuad:
-      result.add( CM(JAddr(span * i), $(i + 1), thing.kind, thing.low, thing.high) )
+      result.add Mem( offset: JAddr(span * i), name: $(i + 1), kind: kind, low: thing.low, high: thing.high)
     else:
-      result.add( CM(JAddr(span * i), $(i + 1), thing.kind) )
+      result.add Mem( offset: JAddr(span * i), name: $(i + 1), kind: kind)
 
-proc repeat(kind: Kind, n, span: int): seq[Mem] =
+proc repeat(kind: Kind, n, span: int): seq[Mem] {.compileTime.} = # refactor into macro
   result = newSeqOfCap[Mem](n)
   for i in 0..<n:
-    result.add(CM(JAddr(span * i), $(i + 1), kind))
+    result.add Mem( offset: JAddr(span * i), name: $(i + 1), kind: kind)
 
-proc generate_control_source_values(): seq[string] =
+proc generate_control_source_values(): seq[string] {.compileTime.} =
   result.add("OFF")
   for i in 1 .. 31:
     result.add("CC" & $i)
@@ -110,100 +90,47 @@ proc generate_control_source_values(): seq[string] =
   result.add("BEND")
   result.add("AFT")
 
-### values section
-
-let control_source_values = generate_control_source_values()
-let mfx_control_source_values = control_source_values & "SYS1   SYS2   SYS3   SYS4".splitWhitespace()
-let matrix_control_source_values = mfx_control_source_values & "VELOCITY   KEYFOLLOW   TEMPO   LFO1   LFO2   PIT-ENV   TVF-ENV   TVA-ENV".splitWhitespace()
-
-let parameters_20* = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(20, 4)
-let parameters_32* = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(32, 4)
-let output_assign_values = "A   ---   ---   ---".splitWhitespace()
-
-let off_on_patch = "OFF ON PATCH".splitWhitespace()
-
-let matrix_control_dest_values = """
-  OFF   PCH  CUT  RES      LEV  PAN
-  DRY   CHO  REV  PIT-LFO1
-  PIT-LFO2  TVF-LFO1   TVF-LFO2
-  TVA-LFO1  TVA-LFO2   PAN-LFO1
-  PAN-LFO2  LFO1-RATE  LFO2-RATE
-  PIT-ATK   PIT-DCY    PIT-REL
-  TVF-ATK   TVF-DCY    TVF-REL
-  TVA-ATK   TVA-DCY    TVA-REL
-  TMT  FXM   FX1   MFX2    MFX3  MFX4
-""".splitWhitespace()
-
-let random_pitch_depth_values* = """
-  0    1    2    3    4    5    6    7    8    9
-       10   20   30   40   50   60   70   80   90
-       100  200  300  400  500  600  700  800  900
-       1000 1100 1200
-""".splitWhitespace()
-let tvf_filter_types* = "OFF LPF BPF HPF PKG LPF2 LPF3".splitWhitespace()
-
-let auto_pitch_key_values* = """
-  C    Db    D    Eb    E    F    F#    G    Ab    A    Bb    B
-  Cm   C#m   Dm   D#m   Em   Fm   F#m   Gm   G#m   A    Bbm   Bm
-""".splitWhitespace()
-let auto_pitch_note_values = "C C# D D# E F F# G G# A A# B".splitWhitespace()
-
-let source_values = "PERFORM 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16".splitWhitespace()
-let voice_reserves = Mem(kind: TByte, low: 0, high: 64).repeat(16, 1)
-
-let polarity = "STANDARD REVERSE".splitWhitespace()
-let pedal_assign_values = """
-  MODULATION
-  PORTA-TIME
-  VOLUME
-  PAN
-  EXPRESSION
-  HOLD
-  PORTAMENTO
-  SOSTENUTO
-  RESONANCE
-  RELEASE-TIME
-  ATTACK-TIME
-  CUTOFF
-  DECAY-TIME
-  VIB-RATE
-  VIB-DEPTH
-  VIB-DELAY
-  CHO-SEND-LEVEL
-  REV-SEND-LEVEL
-  AFTERTOUCH
-  START/STOP
-  TAP-TEMPO
-  PROG-UP
-  PROG-DOWN
-  FAV-UP
-  FAV-DOWN
-""".splitWhitespace()
-
-let knob_assign_values = control_source_values & """
-  EQ-LOW-FREQ
-  EQ-LOW-GAIN
-  EQ-MID-FREQ
-  EQ-MID-GAIN
-  EQ-MID-Q
-  EQ-HIGH-FREQ
-  EQ-HIGH-GAIN
-""".splitWhitespace()
-
-
 ### macros section
 
-proc id_string(input: NimNode): string =
+proc unrecognized(args: varargs[string]) {.compileTime.} =
+  echo "unrecognized: ", args.join(" ")
+
+proc id_string(input: NimNode): string {.compileTime.} =
   result = case input.kind
   of nnkIntLit:
     $input.intVal()
   of nnkStrLit, nnkIdent:
     input.strVal()
   else:
-    echo "unrecognized id = " & input[1].treeRepr
+    unrecognized "id = " & input[1].treeRepr
     ""
 
-proc diveMap(input: NimNode): seq[NimNode] =
+proc get_all_command_ids(cmd: NimNode): seq[string] {.compileTime.} =
+  result = @[]
+  for id in cmd:
+    case id.kind
+    of nnkCommand, nnkPrefix:
+      for id2 in get_all_command_ids(id):
+        result.add id2
+    of nnkIdent, nnkStrLit:
+      result.add id.id_string()
+    of nnkIntLit:
+      result.add $id.intVal()
+    of nnkTripleStrLit:
+      for str in id.strVal().splitWhitespace():
+        result.add str
+    else:
+      unrecognized "word id = " & $id.kind
+
+macro words(stmts: untyped): untyped =
+  #echo "input words = " & stmts.treeRepr
+  result = quote do:
+    @[]
+  for word in get_all_command_ids(stmts):
+    result[^1].add newLit(word)
+  #echo "output words = " & result.treeRepr
+
+proc diveMap(input: NimNode): seq[NimNode] {.compileTime.} =
   result = @[]
   #echo input.kind
   case input.kind
@@ -230,10 +157,10 @@ proc diveMap(input: NimNode): seq[NimNode] =
       of nnkStrLit, nnkIdent:
         input[1][0].strVal()
       else:
-        echo "unrecognized id = " & input[1].treeRepr
+        unrecognized "id = " & input[1].treeRepr
         ""
     else:
-      echo "unrecognized id = " & input[1].treeRepr
+      unrecognized "id = " & input[1].treeRepr
       ""
 
     if input[1].kind == nnkCommand:
@@ -247,19 +174,39 @@ proc diveMap(input: NimNode): seq[NimNode] =
         result.add quote do:
           Mem( offset: `offset`, name: `name`, kind: `kind`, low: `low`, high: `high` )
       of "TEnum":
-        input.expectLen(3)
-        let values = input[2]
-        result.add quote do:
-          Mem( offset: `offset`, name: `name`, kind: `kind`, values: `values` )
+        case input[2].kind
+        of nnkPrefix, nnkCall, nnkIdent:
+          let values = input[2]
+          result.add quote do:
+            Mem( offset: `offset`, name: `name`, kind: `kind`, values: `values` )
+        #of nnkStmtList:
+        #  let values = quote do:
+        #    @[]
+        #  for word in get_all_command_ids(input[2]):
+        #    values[^1].add newLit(word)
+        #  result.add quote do:
+        #    Mem( offset: `offset`, name: `name`, kind: `kind`, values: `values` )
+        of nnkStrLit, nnkTripleStrLit:
+          let values = quote do:
+            @[]
+          for word in input[2].strVal().splitWhitespace():
+            values[^1].add newLit(word)
+          result.add quote do:
+            Mem( offset: `offset`, name: `name`, kind: `kind`, values: `values` )
+        else:
+          unrecognized "TEnum values = " & input[2].treeRepr
       of "TBool", "TName", "TName16":
         result.add quote do:
           Mem( offset: `offset`, name: `name`, kind: `kind` )
       else:
-        echo "unrecognized mem kind = ", kind
+        #let area = input[1][1]
+        #result.add quote do:
+        #  Mem( offset: `offset`, name: `name`, area: `area` )
+        unrecognized "mem = " & kind.treeRepr
 
     elif input.len() >= 3:
       for area in diveMap(input[2]):
-        echo "area = " , area.treeRepr
+        #echo "area = " , area.treeRepr
         case area.kind
         of nnkBracket:
           result.add quote do:
@@ -283,11 +230,14 @@ proc diveMap(input: NimNode): seq[NimNode] =
       Mem( name: `name`, area: @[])
     input[0].expectKind {nnkIdent, nnkStrLit, nnkIntLit}
     for stmtlist in diveMap(input[1]):
-      if stmtlist.kind == nnkBracket:
+      case stmtlist.kind
+      of nnkBracket:
         for stmt in stmtlist:
           result[^1][^1][^1][^1].add(stmt)
-      elif stmtlist.kind == nnkIdent:
+      of nnkIdent:
         result[^1][^1][^1] = stmtlist
+      of nnkObjConstr:
+        result[^1][^1][^1][^1].add(stmtlist)
       else:
         echo "stmtlist kind = " & $stmtlist.kind
         result[^1][^1][^1][^1].add(stmtlist)
@@ -298,7 +248,7 @@ proc diveMap(input: NimNode): seq[NimNode] =
       `input`
 
 macro genMap(statement: untyped): untyped =
-  echo "input ast = " & statement.treeRepr
+  #echo "input ast = " & statement.treeRepr
   var bracket = quote do:
     []
   for sub in statement:
@@ -310,8 +260,100 @@ macro genMap(statement: untyped): untyped =
         bracket.add dive
   result = quote do:
     @`bracket`
-  echo "output ast = " & result.treeRepr
+  #echo "output ast = " & result.treeRepr
   echo result.repr
+
+
+### values section
+
+let control_source_values = generate_control_source_values()
+let mfx_sys_values = words: SYS1 SYS2 SYS3 SYS4
+let mfx_control_source_values = control_source_values & mfx_sys_values
+let mfx_control_more_values = words: """
+  VELOCITY
+  KEYFOLLOW
+  TEMPO
+  LFO1
+  LFO2
+  PIT-ENV
+  TVF-ENV
+  TVA-ENV
+"""
+let matrix_control_source_values = mfx_control_source_values & mfx_control_more_values
+
+let parameters_20 = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(20, 4)
+let parameters_32 = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(32, 4)
+let output_assign_values = words: "A --- --- ---"
+
+let matrix_control_dest_values = words: """
+  OFF   PCH   CUT   RES     LEV   PAN
+  DRY   CHO   REV   PIT-LFO1
+  PIT-LFO2  TVF-LFO1   TVF-LFO2
+  TVA-LFO1  TVA-LFO2   PAN-LFO1
+  PAN-LFO2  LFO1-RATE  LFO2-RATE
+  PIT-ATK   PIT-DCY    PIT-REL
+  TVF-ATK   TVF-DCY    TVF-REL
+  TVA-ATK   TVA-DCY    TVA-REL
+  TMT   FXM   FX1   MFX2    MFX3  MFX4
+"""
+
+let random_pitch_depth_values = words:
+  0 1  2    3    4    5    6    7    8    9
+  10   20   30   40   50   60   70   80   90
+  100  200  300  400  500  600  700  800  900
+  1000 1100 1200
+
+let tvf_filter_types = words: OFF LPF BPF HPF PKG LPF2 LPF3
+
+let auto_pitch_key_values = words: """
+  C    Db    D    Eb    E    F    F#    G    Ab    A    Bb    B
+  Cm   C#m   Dm   D#m   Em   Fm   F#m   Gm   G#m   A    Bbm   Bm
+"""
+
+let auto_pitch_note_values = words: "C  C#  D  D#  E  F  F#  G  G#  A  A#  B"
+
+let source_values = words: PERFORM  1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16
+let voice_reserves = Mem(kind: TByte, low: 0, high: 64).repeat(16, 1)
+
+let polarity = words: STANDARD REVERSE
+let pedal_assign_values = words: """
+  MODULATION
+  PORTA-TIME
+  VOLUME
+  PAN
+  EXPRESSION
+  HOLD
+  PORTAMENTO
+  SOSTENUTO
+  RESONANCE
+  RELEASE-TIME
+  ATTACK-TIME
+  CUTOFF
+  DECAY-TIME
+  VIB-RATE
+  VIB-DEPTH
+  VIB-DELAY
+  CHO-SEND-LEVEL
+  REV-SEND-LEVEL
+  AFTERTOUCH
+  START/STOP
+  TAP-TEMPO
+  PROG-UP
+  PROG-DOWN
+  FAV-UP
+  FAV-DOWN
+"""
+
+let control_source_more_values = words: """
+  EQ-LOW-FREQ
+  EQ-LOW-GAIN
+  EQ-MID-FREQ
+  EQ-MID-GAIN
+  EQ-MID-Q
+  EQ-HIGH-FREQ
+  EQ-HIGH-GAIN
+"""
+let knob_assign_values = control_source_values & control_source_more_values
 
 
 ### map definitions
@@ -351,7 +393,7 @@ let chorus = genMap:
   0x00 type               TByte, 0, 3
   0x01 level              TByte, 0, 127
   0x02 output_assign      TEnum, output_assign_values
-  0x03 output_select      TEnum, @["MAIN","REV","MAIN+REV"]
+  0x03 output_select      TEnum, "MAIN REV MAIN+REV"
   0x04 parameter:         parameters_20
 
 let reverb = genMap:
@@ -387,10 +429,10 @@ let part_n = genMap:
   0x08 pan                  TByte, 0, 127
   0x09 coarse_tune          TByte, 16, 112
   0x0a fine_tune            TByte, 14, 114
-  0x0b mono_poly            TEnum, @["MONO","POLY","PATCH"]
-  0x0c legato               TEnum, off_on_patch
+  0x0b mono_poly            TEnum, "MONO POLY PATCH"
+  0x0c legato               TEnum, "OFF ON PATCH"
   0x0d bend_range           TByte, 0, 25          # 25=PATCH
-  0x0e portamento_switch    TEnum, off_on_patch
+  0x0e portamento_switch    TEnum, "OFF ON PATCH"
   0x0f portamento_time      TNibblePair, 0, 128   # 128=PATCH
   0x11 cutoff_offset        TByte, 0, 127         # -64 .. +63
   0x12 resonance_offset     TByte, 0, 127         # -64 .. +63
@@ -403,13 +445,13 @@ let part_n = genMap:
   0x1c dry_send             TByte, 0, 127
   0x1d chorus_send          TByte, 0, 127
   0x1e reverb_send          TByte, 0, 127
-  0x1f output_assign        TEnum, @["MFX","A","---","---","---", $1, $2, "---","---","---","---","---","---","PART"]
-  0x20 output_mfx_select    TEnum, @["MFX1","MFX2","MFX3"]
+  0x1f output_assign        TEnum, "MFX A --- --- --- 1 2 --- --- --- --- --- --- PART"
+  0x20 output_mfx_select    TEnum, "MFX1 MFX2 MFX3"
   0x21 decay_offset         TByte, 0, 127         # -64 .. +63
   0x22 vibrato_rate         TByte, 0, 127         # -64 .. +63
   0x23 vibrato_depth        TByte, 0, 127         # -64 .. +63
   0x24 vibrato_delay        TByte, 0, 127         # -64 .. +63
-  0x25 scale: scale_map
+  0x25 scale:               scale_map
 let parts = part_n.repeat(16, 0x100)
 
 let zone_n = genMap:
@@ -425,13 +467,13 @@ let zones = zone_n.repeat(16, 0x100)
 let matrix_control = genMap:
   0 source            TEnum, matrix_control_source_values
   1 destination_1     TEnum, matrix_control_dest_values
-  2 sens_1            TByte, 1, 127               # -63 .. +63
+  2 sens_1            TByte, 1, 127                       # -63 .. +63
   3 destination_2     TEnum, matrix_control_dest_values
-  4 sens_2            TByte, 1, 127               # -63 .. +63
+  4 sens_2            TByte, 1, 127                       # -63 .. +63
   5 destination_3     TEnum, matrix_control_dest_values
-  6 sens_3            TByte, 1, 127               # -63 .. +63
+  6 sens_3            TByte, 1, 127                       # -63 .. +63
   7 destination_4     TEnum, matrix_control_dest_values
-  8 sens_4            TByte, 1, 127               # -63 .. +63
+  8 sens_4            TByte, 1, 127                       # -63 .. +63
 
 let keyboard_ranges = genMap:
   0 range_lower   TByte, 0, 127
@@ -450,7 +492,7 @@ let tmt_n = genMap:
   1 keyboard:     keyboard_ranges
   5 velocity:     velocity_ranges
 
-
+let booster_values = words: "0  +6  +12  +18"
 let tmt = genMap:
   "1-2":
     0x00   structure_type     TByte, 0, 9
@@ -458,13 +500,13 @@ let tmt = genMap:
   "3-4":
     0x02   structure_type     TByte, 0, 9
     0x03   booster            TEnum, booster_values
-  0x04     velocity_control   TEnum, @["OFF","ON","RANDOM","CYCLE"]
+  0x04     velocity_control   TEnum, "OFF  ON  RANDOM  CYCLE"
   0x05     1: tmt_n
   0x0e     2: tmt_n
   0x17     3: tmt_n
   0x20     4: tmt_n
 
-let tone_control_switch = Mem(kind: TEnum, values: @["OFF","ON","REVERSE"]).repeat(4, 1)
+let tone_control_switch = Mem(kind: TEnum, values: words("OFF  ON  REVERSE")).repeat(4, 1)
 let tone_control_switches = genMap:
   switch: tone_control_switch
 
@@ -477,20 +519,20 @@ let patch_tone_n = genMap:
   0x0005   pan_keyfollow      TByte, 54, 74 # -100 .. +100
   0x0006   random_pan_depth   TByte, 0, 63
   0x0007   alt_pan_depth      TByte, 1, 127
-  0x0008   env_sustain        TEnum, @["NO-SUS","SUSTAIN"]
-  0x0009   delay_mode         TEnum, @["NORMAL","HOLD","KEY-OFF-NORMAL","KEY-OFF-DECAY"]
+  0x0008   env_sustain        TEnum, "NO-SUS  SUSTAIN"
+  0x0009   delay_mode         TEnum, "NORMAL  HOLD  KEY-OFF-NORMAL  KEY-OFF-DECAY"
   0x000a   delay_time         TNibblePair, 0, 149 # 0 - 127, MUSICAL-NOTES
   0x000c   dry_send           TByte, 0, 127
   0x000d   chorus_send_mfx    TByte, 0, 127
   0x000e   reverb_send_mfx    TByte, 0, 127
   0x000f   chorus_send        TByte, 0, 127
   0x0010   reverb_send        TByte, 0, 127
-  0x0011   output_assign      TEnum, @["MFX","A","---","---","---", $1, $2, "---","---","---","---","---","---"]
+  0x0011   output_assign      TEnum, "MFX A --- --- ---", 1, 2, "--- --- --- --- --- ---"
   rx:
     0x0012 bend               TBool
     0x0013 expression         TBool
     0x0014 hold_1             TBool
-    0x0015 pan_mode           TEnum, @["CONTINUOUS","KEY-ON"]
+    0x0015 pan_mode           TEnum, "CONTINUOUS KEY-ON"
     0x0016 redamper_switch    TBool
   control:
     0x0017 1:                 tone_control_switches
@@ -501,7 +543,7 @@ let patch_tone_n = genMap:
   wave:
     0x002c number_l           TNibbleQuad, 0, 16384 # 0=OFF
     0x0030 number_r           TNibbleQuad, 0, 16384 # 0=OFF
-    0x0034 gain               TEnum, @["-6","0","+6","+12"]
+    0x0034 gain               TEnum, "-6 0 +6 +12"
     fxm:
       0x35 switch             TBool
       0x36 color              TByte, 0, 3
@@ -557,7 +599,7 @@ let patch_tone_n = genMap:
     bias:
       0x5e level              TByte, 54, 74 # -100 .. +100
       0x5f position           TByte, 0, 127
-      0x60 direction          TEnum, @["LOWER","UPPER","LOWER&UPPER","ALL"]
+      0x60 direction          TEnum, "LOWER  UPPER  LOWER&UPPER  ALL"
     level:
       0x61 velocity_curve     TByte, 0, 7
       0x62 velocity_sens      TByte, 1, 127
@@ -576,15 +618,15 @@ let patch_tone_n = genMap:
          0x6c 3                TByte, 0, 127
   lfo:
     1:
-      0x006d waveform        TEnum, @["SIN","TRI","SAW-UP","SAW-DW","SQR","RND","BEND-UP","BEND-DN","TRP","S&H","CHS","VSIN","STEP"]
+      0x006d waveform        TEnum, "SIN  TRI  SAW-UP  SAW-DW  SQR  RND  BEND-UP  BEND-DN  TRP  S&H  CHS  VSIN  STEP"
       0x006e rate            TNibblePair, 0, 149 # 0 .. 127, MUSICAL-NOTES
-      0x0070 offset          TEnum, @["-100","-50","0","+50","+100"]
+      0x0070 offset          TEnum, "-100  -50  0  +50  +100"
       0x0071 rate_detune     TByte, 0, 127
       delay:
         0x072  time          TByte, 0, 127
         0x073  key_follow    TByte, 54, 74 # -100 .. +100
       fade:
-        0x074  mode          TEnum, @["ON-IN","ON-OUT","OFF-IN","OFF-OUT"]
+        0x074  mode          TEnum, "ON-IN  ON-OUT  OFF-IN  OFF-OUT"
         0x075  time          TByte, 0, 127
       0x0076 key_trigger     TBool
       0x0077 pitch_depth     TByte, 1, 127 # -63 .. +63
@@ -592,15 +634,15 @@ let patch_tone_n = genMap:
       0x0079 tva_depth       TByte, 1, 127 # -63 .. +63
       0x007a pan_depth       TByte, 1, 127 # -63 .. +63
     2:
-      0x007b waveform        TEnum, @["SIN","TRI","SAW-UP","SAW-DW","SQR","RND","BEND-UP","BEND-DN","TRP","S&H","CHS","VSIN","STEP"]
+      0x007b waveform        TEnum, "SIN  TRI  SAW-UP  SAW-DW  SQR  RND  BEND-UP  BEND-DN  TRP  S&H  CHS  VSIN  STEP"
       0x007c rate            TNibblePair, 0, 149 # 0 .. 127, MUSICAL-NOTES
-      0x007e offset          TEnum, @["-100","-50","0","+50","+100"]
+      0x007e offset          TEnum, "-100  -50  0  +50  +100"
       0x007f rate_detune     TByte, 0, 127
       delay:
         0x100  time          TByte, 0, 127
         0x101  key_follow    TByte, 54, 74 # -100 .. +100
       fade:
-        0x102  mode          TEnum, @["ON-IN","ON-OUT","OFF-IN","OFF-OUT"]
+        0x102  mode          TEnum, "ON-IN  ON-OUT  OFF-IN  OFF-OUT"
         0x103  time          TByte, 0, 127
       0x0104 key_trigger     TBool
       0x0105 pitch_depth     TByte, 1, 127 # -63 .. +63
@@ -626,9 +668,13 @@ let patch_tone_n = genMap:
       0x0118  15             TByte, 28, 100 # -36 .. +36
       0x0119  16             TByte, 28, 100 # -36 .. +36
 
-
-
-
+let performance_controller = genMap:
+  0x00 reserved_1
+  0x18 arp_zone_number       TByte, 0, 15
+  0x19 reserved_1
+  0x54 recommended_tempo     TNibblePair, 20, 250
+  0x56 reserved_2
+  0x59 reserved_3
 
 let performance_pattern = genMap:
   common:
@@ -655,13 +701,7 @@ let performance_pattern = genMap:
   0x1000 midi:                 midis
   0x2000 part:                 parts
   0x5000 zone:                 zones
-  0x6000 controller:
-    0x00 reserved_1
-    0x18 arp_zone_number       TByte, 0, 15
-    0x19 reserved_1
-    0x54 recommended_tempo     TNibblePair, 20, 250
-    0x56 reserved_2
-    0x59 reserved_3
+  0x6000 controller:           performance_controller
 let performance_patterns = performance_pattern.repeat(128, 0x010000)
 
 let pad = genMap:
@@ -676,7 +716,7 @@ let patch = genMap:
     0x0d      reserved_1
     0x0e      level              TByte, 0, 127
     0x0f      pan                TByte, 0, 127
-    0x10      priority           TEnum, @["LAST","LOUDEST"]
+    0x10      priority           TEnum, "LAST  LOUDEST"
     0x11      coarse_tune        TByte, 16, 112 # -48 .. +48
     0x12      fine_tune          TByte, 14, 114 # -50 .. +50
     0x13      octave_shift       TByte, 61, 67               #  -3 .. +3
@@ -687,17 +727,17 @@ let patch = genMap:
     0x18      legato_retrigger   TBool
     portamento:
       0x19    switch             TBool
-      0x1a    mode               TEnum, @["NORMAL","LEGATO"]
-      0x1b    type               TEnum, @["RATE","TIME"]
-      0x1c    start              TEnum, @["PITCH","NOTE"]
+      0x1a    mode               TEnum, "NORMAL LEGATO"
+      0x1b    type               TEnum, "RATE   TIME"
+      0x1c    start              TEnum, "PITCH  NOTE"
       0x1d    time               TByte, 0, 127
     0x1e      reserved_2
-    0x22      cutoff_offset      TByte, 1, 127 # -63 .. +63
-    0x23      resonance_offset   TByte, 1, 127 # -63 .. +63
-    0x24      attack_offset      TByte, 1, 127 # -63 .. +63
-    0x25      release_offset     TByte, 1, 127 # -63 .. +63
-    0x26      velocity_offset    TByte, 1, 127 # -63 .. +63
-    0x27      output_assign      TEnum, @["MFX","A","---","---","---", $1, $2, "---","---","---","---","---","---","TONE"]
+    0x22      cutoff_offset      TByte, 1, 127  # -63 .. +63
+    0x23      resonance_offset   TByte, 1, 127  # -63 .. +63
+    0x24      attack_offset      TByte, 1, 127  # -63 .. +63
+    0x25      release_offset     TByte, 1, 127  # -63 .. +63
+    0x26      velocity_offset    TByte, 1, 127  # -63 .. +63
+    0x27      output_assign      TEnum, "MFX  A  ---  ---  ---  1  2  ---  ---  ---  ---  ---  ---  TONE"
     0x28      tmt_control_switch TBool
     0x29      bend_range_up      TByte, 0, 48
     0x2a      bend_range_down    TByte, 0, 48
@@ -724,7 +764,7 @@ let drum_wmt_n = genMap:
     0x01    reserved
     0x06    number_l            TNibbleQuad, 0, 16384 # 0=OFF
     0x0a    number_r            TNibbleQuad, 0, 16384 # 0=OFF
-    0x0e    gain                TEnum, @["-6","0","+6","+12"]
+    0x0e    gain                TEnum, "-6  0  +6  +12"
     fxm:
       0x0f  switch              TBool
       0x10  color               TByte, 0, 3
@@ -734,9 +774,9 @@ let drum_wmt_n = genMap:
     0x14    fine_tune           TByte, 14, 114 # -50 .. +50
     0x15    pan                 TByte, 0, 127
     0x16    random_pan_switch   TBool
-    0x17    alt_pan_switch      TEnum, @["OFF","ON","REVERSE"]
+    0x17    alt_pan_switch      TEnum, "OFF  ON  REVERSE"
     0x18    level               TByte, 0, 127
-  0x19      velocity            velocity_ranges
+  0x19      velocity:           velocity_ranges
 
 let drum_tone_n = genMap:
   0x00    name                      TName
@@ -755,14 +795,14 @@ let drum_tone_n = genMap:
   0x18    reverb_send               TByte, 0, 127
   0x19    chorus_send               TByte, 0, 127
   0x1a    reverb_send               TByte, 0, 127
-  0x1b    output_assign             TEnum, @["MFX","A","---","---","---", $1, $2, "---","---","---","---","---","---"]
+  0x1b    output_assign             TEnum, "MFX A --- --- --- 1 2 --- --- --- --- --- ---"
   0x1c    bend_range                TByte, 0, 48
   rx:
     0x1d  expression                TBool
     0x1e  hold_1                    TBool
-    0x1f  pan_mode                  TEnum, @["CONTINUOUS","KEY-ON"]
+    0x1f  pan_mode                  TEnum, "CONTINUOUS  KEY-ON"
   wmt:
-    0x20  velocity_control          TEnum, @["OFF","ON","RANDOM"]
+    0x20  velocity_control          TEnum, "OFF  ON  RANDOM"
     0x21  1:                        drum_wmt_n
     0x3e  2:                        drum_wmt_n
     0x5b  3:                        drum_wmt_n
@@ -832,7 +872,7 @@ proc generate_drum_tones(): MemArea =
   for i in 21..108:
     let k = 0x1000 + (0x200 * (i - 21))
     let a = ((k and 0x8000) shl 1) or (k and 0x7fff)
-    result.add( CMA(JAddr(a), $i, drum_tone_n) )
+    result.add Mem( offset: JAddr(a), name: $i, area: drum_tone_n )
 let drum_tones = generate_drum_tones()
 
 let drum_kit = genMap:
@@ -840,7 +880,7 @@ let drum_kit = genMap:
     0x00   name            TName
     0x0c   level           TByte, 0, 127
     0x0d   reserved
-    0x11   output_assign   TEnum, @["MFX","A","---","---","---", $1, $2, "---","---","---","---","---","---","TONE"]
+    0x11   output_assign   TEnum, "MFX  A  ---  ---  ---  1  2 ---  ---  ---  ---  ---  ---  TONE"
   0x000200 mfx:            mfx
   0x000400 chorus:         chorus
   0x000600 reverb:         reverb
@@ -874,7 +914,7 @@ let rhythm_group = genMap:
 
 let vocal_effect = genMap:
   0x00 name          TName
-  0x0c type          TEnum, @["Vocoder","Auto-Pitch"]
+  0x0c type          TEnum, "Vocoder Auto-Pitch"
   0x0d reserved_1
   0x0e bank_msb      TByte, 0, 127
   0x0f bank_lsb      TByte, 0, 127
@@ -883,72 +923,93 @@ let vocal_effect = genMap:
   0x12 pan           TByte, 0, 127
   0x13 reserved_2
   auto_pitch:
-    0x16 type        TEnum, @["SOFT","HARD","ELECTRIC1","ELECTRIC2","ROBOT"]
-    0x17 scale       TEnum, @["CHROMATIC","Maj(Min)"]
+    0x16 type        TEnum, "SOFT HARD ELECTRIC1 ELECTRIC2 ROBOT"
+    0x17 scale       TEnum, "CHROMATIC Maj(Min)"
     0x18 key         TEnum, auto_pitch_key_values
     0x19 note        TEnum, auto_pitch_note_values
     0x1a gender      TByte, 0, 20 # -10 .. +10
     0x1b octave      TByte, 0, 2  # -1 .. +1
     0x1c balance     TByte, 0, 100
   vocoder:
-    0x1d envelope    TEnum, @["SHARP","SOFT","LONG"]
+    0x1d envelope    TEnum, "SHARP SOFT LONG"
     0x1e mic_sens    TByte, 0, 127
     0x1f synth_level TByte, 0, 127
     0x20 mic_mix     TByte, 0, 127
-    0x21 mic_hpf     TEnum, @["BYPASS", "1000", "1250", "1600", "2000", "2500", "3150", "4000", "5000", "6300", "8000", "10000", "12500", "16000"]
+    0x21 mic_hpf     TEnum, "BYPASS 1000 1250 1600 2000 2500 3150 4000 5000 6300 8000 10000 12500 16000"
   0x22 part_level    TByte, 0, 127
-let vocal_effects        = vocal_effect.repeat(20, 0x100)
+let vocal_effects = vocal_effect.repeat(20, 0x100)
 
 let setup = genMap:
-  0x00 sound_mode           TEnum, @["PATCH","PERFORM","GM1","GM2","GS"]
+  0x00 sound_mode         TEnum, "PATCH PERFORM GM1 GM2 GS"
   performance:
-    0x01 bank_msb           TByte, 0, 127
-    0x02 bank_lsb           TByte, 0, 127
-    0x03 pc                 TByte, 0, 127
+    0x01 bank_msb         TByte, 0, 127
+    0x02 bank_lsb         TByte, 0, 127
+    0x03 pc               TByte, 0, 127
   kbd_patch:
-    0x04 bank_msb           TByte, 0, 127
-    0x06 bank_lsb           TByte, 0, 127
-    0x07 pc                 TByte, 0, 127
+    0x04 bank_msb         TByte, 0, 127
+    0x06 bank_lsb         TByte, 0, 127
+    0x07 pc               TByte, 0, 127
   rhy_patch:
-    0x07 bank_msb           TByte, 0, 127
-    0x08 bank_lsb           TByte, 0, 127
-    0x09 pc                 TByte, 0, 127
-    0x0a mfx1_switch        TBool
-    0x0b mfx2_switch        TBool
-    0x0c mfx3_switch        TBool
-    0x0d chorus_switch      TBool
-    0x0e reverb_switch      TBool
-    0x0f reserved_1
-    0x12 transpose          TByte, 59, 70   # -5 .. +6
-    0x13 octave_shift       TByte, 61, 67   # -3 .. +3
-    0x14 reserved_4
-    0x15 knob_select        TByte, 0, 2
-    0x16 reserved_5
-    arpeggio:
-      0x17 grid             TEnum, @["04_","08_","08L","08H","08t","16_","16L","16H","16t"]
-      0x18 duration         TEnum, @["30","40","50","60","70","80","90","100","120","FUL"]
-      0x19 switch           TBool
-      0x1a reserved_6
-      0x1b style            TByte, 0, 127
-      0x1c motif            TEnum, @["UP/L","UP/H","UP/_","dn/L","dn/H","dn/_","Ud/L","Ud/H","Ud/_","rn/L"]
-      0x1d octave_range     TByte, 61, 67   # -3 .. +3
-      0x1e hold             TBool
-      0x1f accent           TByte, 0, 100
-      0x20 velocity         TByte, 0, 127
-    rhythm:
-      0x21 switch           TBool
-      0x22 reserved_7
-      0x23 style            TNibblePair, 0, 255
-      0x25 reserved_8
-      0x26 group            TByte, 0, 29
-      0x27 accent           TByte, 0, 100
-      0x28 velocity         TByte, 1, 127
-      0x29 reserved_9
-    0x33 arpeggio_step      TByte, 0, 32
+    0x07 bank_msb         TByte, 0, 127
+    0x08 bank_lsb         TByte, 0, 127
+    0x09 pc               TByte, 0, 127
+  0x0a mfx1_switch        TBool
+  0x0b mfx2_switch        TBool
+  0x0c mfx3_switch        TBool
+  0x0d chorus_switch      TBool
+  0x0e reverb_switch      TBool
+  0x0f reserved_1
+  0x12 transpose          TByte, 59, 70   # -5 .. +6
+  0x13 octave_shift       TByte, 61, 67   # -3 .. +3
+  0x14 reserved_4
+  0x15 knob_select        TByte, 0, 2
+  0x16 reserved_5
+  arpeggio:
+    0x17 grid             TEnum, "04_ 08_ 08L 08H 08t 16_ 16L 16H 16t"
+    0x18 duration         TEnum, "30 40 50 60 70 80 90 100 120 FUL"
+    0x19 switch           TBool
+    0x1a reserved_6
+    0x1b style            TByte, 0, 127
+    0x1c motif            TEnum, "UP/L UP/H UP/_ dn/L dn/H dn/_ Ud/L Ud/H Ud/_ rn/L"
+    0x1d octave_range     TByte, 61, 67   # -3 .. +3
+    0x1e hold             TBool
+    0x1f accent           TByte, 0, 100
+    0x20 velocity         TByte, 0, 127
+  rhythm:
+    0x21 switch           TBool
+    0x22 reserved_7
+    0x23 style            TNibblePair, 0, 255
+    0x25 reserved_8
+    0x26 group            TByte, 0, 29
+    0x27 accent           TByte, 0, 100
+    0x28 velocity         TByte, 1, 127
+    0x29 reserved_9
+  0x33 arpeggio_step      TByte, 0, 32
+
+let system_controller = genMap:
+  tx:
+    0x00 pc               TBool
+    0x01 bank             TBool
+  0x02 velocity           TByte, 0, 127 # 0=REAL
+  0x03 velocity_curve     TEnum, "LIGHT   MEDIUM   HEAVY"
+  0x04 reserved_1
+  0x05 hold_polarity      TEnum, polarity
+  0x06 continuous_hold    TBool
+  control_pedal:
+    0x07 assign           TEnum, pedal_assign_values
+    0x08 polarity         TEnum, polarity
+  0x09 reserved_2
+  knob_assign:
+    0x10 1                TEnum, knob_assign_values
+    0x11 2                TEnum, knob_assign_values
+    0x12 3                TEnum, knob_assign_values
+    0x13 4                TEnum, knob_assign_values
+  0x14 reserved_2
+  0x4d reserved_3
 
 let system = genMap:
-  0x000000 common:
-    0x0000 master:
+  common:
+    master:
       0x00 tune             TNibbleQuad, 24, 2024 # -100 .. +100
       0x04 key_shift        TByte, 40, 88    #  -24 .. +24
       0x05 level            TByte, 0, 127
@@ -967,62 +1028,44 @@ let system = genMap:
     rx:
       0x1c pc               TBool
       0x1d bank             TBool
-  0x004000 controller:
-    tx:
-      0x00 pc               TBool
-      0x01 bank             TBool
-    0x02 velocity           TByte, 0, 127 # 0=REAL
-    0x03 velocity_curve     TEnum, @["LIGHT","MEDIUM","HEAVY"]
-    0x04 reserved_1
-    0x05 hold_polarity      TEnum, polarity
-    0x06 continuous_hold    TBool
-    control_pedal:
-      0x07 assign           TEnum, pedal_assign_values
-      0x08 polarity         TEnum, polarity
-    0x09 reserved_2
-    knob_assign:
-      0x10 1                TEnum, knob_assign_values
-      0x11 2                TEnum, knob_assign_values
-      0x12 3                TEnum, knob_assign_values
-      0x13 4                TEnum, knob_assign_values
-    0x14 reserved_2
-    0x4d reserved_3
+  0x004000 controller:      system_controller
 
+let patch_parts = genMap:
+  0x000000 x1: patch_drum       # patch mode part 1
+  0x200000 x2: patch_drum
 
 let juno = genMap:
-  0x01000000 setup:                 setup
-  0x02000000 system:                system
+  0x01000000       setup:               setup
+  0x02000000       system:              system
   temporary:
-    0x10000000 performance_pattern: performance_pattern
+    0x10000000     performance_pattern: performance_pattern
     performance_part:
-      0x11000000   1:               patch_drum # Temporary Patch/Drum (Performance Mode Part 1)
-      0x11200000   2:               patch_drum
-      0x11400000   3:               patch_drum
-      0x11600000   4:               patch_drum
-      0x12000000   5:               patch_drum
-      0x12200000   6:               patch_drum
-      0x12400000   7:               patch_drum
-      0x12600000   8:               patch_drum
-      0x13000000   9:               patch_drum
-      0x13200000  10:               patch_drum
-      0x13400000  11:               patch_drum
-      0x13600000  12:               patch_drum
-      0x14000000  13:               patch_drum
-      0x14200000  14:               patch_drum
-      0x14400000  15:               patch_drum
-      0x14600000  16:               patch_drum
-    0x1e000000 rhythm_pattern:      arpeggio
-    0x1e110000 arpeggio:            arpeggio
-    0x1e130000 rhythm_group:        rhythm_group
-    0x1e150000 vocal_effect:        vocal_effect
-    0x1f000000 patch_part:
-      0x000000 x1: patch_drum       # patch mode part 1
-      0x200000 x2: patch_drum
+      0x11000000   1:                   patch_drum # Temporary Patch/Drum (Performance Mode Part 1)
+      0x11200000   2:                   patch_drum
+      0x11400000   3:                   patch_drum
+      0x11600000   4:                   patch_drum
+      0x12000000   5:                   patch_drum
+      0x12200000   6:                   patch_drum
+      0x12400000   7:                   patch_drum
+      0x12600000   8:                   patch_drum
+      0x13000000   9:                   patch_drum
+      0x13200000  10:                   patch_drum
+      0x13400000  11:                   patch_drum
+      0x13600000  12:                   patch_drum
+      0x14000000  13:                   patch_drum
+      0x14200000  14:                   patch_drum
+      0x14400000  15:                   patch_drum
+      0x14600000  16:                   patch_drum
+    0x1e000000    rhythm_pattern:       arpeggio
+    0x1e110000    arpeggio:             arpeggio
+    0x1e130000    rhythm_group:         rhythm_group
+    0x1e150000    vocal_effect:         vocal_effect
+    0x1f000000    patch_part:           patch_parts
   user:
-    0x20000000 performance:         performance_patterns
-    0x21000000 pattern:             performance_patterns
-    0x30000000 patch:               performance_patches
-    0x40000000 drum_kit:            drum_kits
-    0x60000000 vocal_effect:        vocal_effects
-let juno_map = Mem(area: juno)
+    0x20000000    performance:          performance_patterns
+    0x21000000    pattern:              performance_patterns
+    0x30000000    patch:                performance_patches
+    0x40000000    drum_kit:             drum_kits
+    0x60000000    vocal_effect:         vocal_effects
+let juno_map* = Mem(area: juno)
 
