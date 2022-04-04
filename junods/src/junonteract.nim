@@ -41,7 +41,7 @@ method set_cmdline(nt: JunoNteract) =
   nt.cmdline = nt.path[1..^1].join(nt.pathsep)
   #nt.pos = nt.cmdline.len() - nt.path[^1].len()
   #echo nt.coords
-  nt.prompt = nt.get_offset().format() & "> "
+  nt.prompt = $nt.get_offset() & "> "
 
   case mem.kind
   of TNone:

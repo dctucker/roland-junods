@@ -12,7 +12,7 @@ proc traverse(mem: Mem, offset: JAddr, path: seq[string]) =
   if mem.offset != NOFF:
     a += mem.offset
   if not hidden:
-    stdout.write a.format(), " "
+    stdout.write $a, " "
 
   var desc = (path & mem.name).join(".")
   if desc.len > 0:
@@ -24,12 +24,18 @@ proc traverse(mem: Mem, offset: JAddr, path: seq[string]) =
   for area in mem.area:
     traverse(area, a, path & mem.name)
 
+proc visit(mem: Mem, level: int = 0) =
+  echo indent($mem, level*4)
+  for area in mem.area:
+    visit area, level + 1
+
 when isMainModule:
   initCache()
+  #visit juno_map
   let nt = newJunoNteract()
-  #for area in nt.areas[^1]:
-  #  echo area.name
   let input = nt.getUserInput()
   echo input
-  #traverse(juno_map, 0, @[])
+  ##for area in nt.areas[^1]:
+  ##  echo area.name
+  #traverse(juno_map, 0.JAddr, @[])
 

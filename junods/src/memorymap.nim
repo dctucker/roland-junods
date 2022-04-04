@@ -2,6 +2,46 @@ import strutils
 import macros
 
 type
+  JAddr* = distinct int64
+const NOFF* = -1.JAddr
+
+proc `==`*(a,b: JAddr): bool {.borrow.}
+proc `+`*(a,b: JAddr): JAddr =
+  if   b == NOFF: return a
+  elif a == NOFF: return b
+  return (a.int64 + b.int64).JAddr
+proc `-`*(a,b: JAddr): JAddr =
+  if   b == NOFF: return  a
+  elif a == NOFF: return  NOFF
+  return (a.int64 - b.int64).JAddr
+proc `and`*(a,b: JAddr): JAddr {.borrow.}
+proc `and`*(a: JAddr, b: int): JAddr =
+  return a and b.JAddr
+proc `or`*(a,b: JAddr): JAddr {.borrow.}
+proc `shl`*(a:JAddr, b: int): JAddr {.borrow.}
+proc `shr`*(a:JAddr, b: int): JAddr {.borrow.}
+proc toHex*(a:JAddr, n: int): string {.borrow.}
+proc `$`*(a:JAddr): string =
+  if a == NOFF:
+    return ""
+  result = "0x" & a.toHex(8).toLower()
+proc repr*(a:JAddr): string =
+  result = "0x" & a.toHex(8).toLower()
+
+proc normalize*(offset: JAddr): JAddr =
+  if offset == NOFF:
+    return offset
+  let n3: JAddr = (offset and 0x7f000000)
+  let n2: JAddr = (offset and 0x007f0000) or ((offset and 0x00800000) shl 1)
+  let n1: JAddr = (offset and 0x00007f00) or ((offset and 0x00008000) shl 1)
+  let n0: JAddr = (offset and 0x0000007f) or ((offset and 0x00000080) shl 1)
+  return (n3 or n2 or n1 or n0) and 0x7f7f7f7f
+
+proc `+=`*(n1: var JAddr, n2: JAddr) =
+  n1 = normalize(n1 + n2)
+
+
+type
   Kind* = enum
     TNone,
     TBool,
@@ -11,9 +51,23 @@ type
     TNibblePair,
     TNibbleQuad,
     TName,
-    TName16,
-  JAddr* = int64
-const NOFF*: JAddr = -1
+    TName16
+
+proc value*(kind: Kind, b: seq[byte]): int =
+  case kind
+  of TByte:   result = b[0].int and 0x7f
+  of TNibble: result = b[0].int and 0x0f
+  of TNibblePair:
+    result = ((b[1].int and 0x0f00) shl 4) or
+              (b[0].int and 0x000f)
+  of TNibbleQuad:
+    result = ((b[3].int and 0x0f0000) shl 12) or
+             ((b[2].int and 0x000f00) shl  8) or
+             ((b[1].int and 0x000f00) shl  4) or
+              (b[0].int and 0x00000f)
+  else:
+    result = b[0].int
+
 
 type
   Mem* = ref object # tree structure for describing areas of device memory
@@ -29,35 +83,32 @@ type
     area*:  seq[Mem]
   MemArea* = seq[Mem]
 
-proc normalize*(offset: JAddr): JAddr =
-  if offset == NOFF:
-    return offset
-  let n3: JAddr = (offset and 0x7f000000)
-  let n2: JAddr = (offset and 0x007f0000) or ((offset and 0x00800000) shl 1)
-  let n1: JAddr = (offset and 0x00007f00) or ((offset and 0x00008000) shl 1)
-  let n0: JAddr = (offset and 0x0000007f) or ((offset and 0x00000080) shl 1)
-  return (n3 or n2 or n1 or n0) and 0x7f7f7f7f
+#proc format(mem: Mem, level: int): string
+#proc format(area: MemArea, level: int): string =
+#  for mem in area:
+#    result &= mem.format(level)
+
+proc format(mem: Mem, level: int): string =
+  if level > 1: return ""
+  for m in mem.area:
+    result &= indent( m.format(level), level*4 )
+  #if mem.area.len() > 0:
+  #  result &= mem.area.format(level)
+
+proc `$`*(mem: Mem): string=
+  result &= $mem.offset
+  if mem.offset != NOFF:
+    result &= " "
+  result &= mem.name
+  if mem.kind != TNone:
+    result &= "\t" & $mem.kind
+  else:
+    result &= ":"
+  #if mem.area.len() > 0:
+  #  result &= ": " & $mem.area
 
 proc value*(mem: Mem, b: seq[byte]): int =
-  case mem.kind
-  of TByte:   result = b[0].int and 0x7f
-  of TNibble: result = b[0].int and 0x0f
-  of TNibblePair:
-    result = ((b[1].int and 0x0f00) shl 4) or
-              (b[0].int and 0x000f)
-  of TNibbleQuad:
-    result = ((b[3].int and 0x0f0000) shl 12) or
-             ((b[2].int and 0x000f00) shl  8) or
-             ((b[1].int and 0x000f00) shl  4) or
-              (b[0].int and 0x00000f)
-  else:
-    result = b[0].int
-
-proc format*(a: JAddr): string =
-  return "0x" & a.toHex(8).toLower()
-
-proc `+=`*(n1: var JAddr, n2: JAddr) =
-  n1 = normalize(n1 + n2)
+  result = mem.kind.value(b)
 
 proc repeat(thing: MemArea, n, span: int): seq[Mem] = # refactor into macro
   result = newSeqOfCap[Mem](n)
@@ -89,6 +140,7 @@ proc generate_control_source_values(): seq[string] {.compileTime.} =
     result.add("CC" & $i)
   result.add("BEND")
   result.add("AFT")
+
 
 ### macros section
 
@@ -172,36 +224,36 @@ proc diveMap(input: NimNode): seq[NimNode] {.compileTime.} =
         let low  = input[2]
         let high = input[3]
         result.add quote do:
-          Mem( offset: `offset`, name: `name`, kind: `kind`, low: `low`, high: `high` )
+          Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, low: `low`, high: `high` )
       of "TEnum":
         case input[2].kind
         of nnkPrefix, nnkCall, nnkIdent:
           let values = input[2]
           result.add quote do:
-            Mem( offset: `offset`, name: `name`, kind: `kind`, values: `values` )
+            Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values` )
         #of nnkStmtList:
         #  let values = quote do:
         #    @[]
         #  for word in get_all_command_ids(input[2]):
         #    values[^1].add newLit(word)
         #  result.add quote do:
-        #    Mem( offset: `offset`, name: `name`, kind: `kind`, values: `values` )
+        #    Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values` )
         of nnkStrLit, nnkTripleStrLit:
           let values = quote do:
             @[]
           for word in input[2].strVal().splitWhitespace():
             values[^1].add newLit(word)
           result.add quote do:
-            Mem( offset: `offset`, name: `name`, kind: `kind`, values: `values` )
+            Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values` )
         else:
           unrecognized "TEnum values = " & input[2].treeRepr
       of "TBool", "TName", "TName16":
         result.add quote do:
-          Mem( offset: `offset`, name: `name`, kind: `kind` )
+          Mem( offset: JAddr(`offset`), name: `name`, kind: `kind` )
       else:
         #let area = input[1][1]
         #result.add quote do:
-        #  Mem( offset: `offset`, name: `name`, area: `area` )
+        #  Mem( offset: JAddr(`offset`), name: `name`, area: `area` )
         unrecognized "mem = " & kind.treeRepr
 
     elif input.len() >= 3:
@@ -210,24 +262,24 @@ proc diveMap(input: NimNode): seq[NimNode] {.compileTime.} =
         case area.kind
         of nnkBracket:
           result.add quote do:
-            Mem( offset: `offset`, name: `name`, area: @`area`)
+            Mem( offset: JAddr(`offset`), name: `name`, area: @`area`)
         of nnkIdent, nnkPrefix:
           result.add quote do:
-            Mem( offset: `offset`, name: `name`, area: `area`)
+            Mem( offset: JAddr(`offset`), name: `name`, area: `area`)
         of nnkObjConstr:
           result.add quote do:
-            Mem( offset: `offset`, name: `name`, area: @[`area`])
+            Mem( offset: JAddr(`offset`), name: `name`, area: @[`area`])
         else:
           echo "unexpected kind = " & area.treeRepr
     else:
       if not name.contains("reserved"):
         result.add quote do:
-          Mem( offset: `offset`, name: `name`)
+          Mem( offset: JAddr(`offset`), name: `name`)
     #echo "name = " & name.repr
   of nnkCall:
     let name = newLit input[0].id_string()
     result.add quote do:
-      Mem( name: `name`, area: @[])
+      Mem( offset: NOFF, name: `name`, area: @[])
     input[0].expectKind {nnkIdent, nnkStrLit, nnkIntLit}
     for stmtlist in diveMap(input[1]):
       case stmtlist.kind
@@ -283,7 +335,9 @@ let matrix_control_source_values = mfx_control_source_values & mfx_control_more_
 
 let parameters_20 = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(20, 4)
 let parameters_32 = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(32, 4)
-let output_assign_values = words: "A --- --- ---"
+let output_assign_values = words: """
+A --- --- ---
+"""
 
 let matrix_control_dest_values = words: """
   OFF   PCH   CUT   RES     LEV   PAN
@@ -506,7 +560,10 @@ let tmt = genMap:
   0x17     3: tmt_n
   0x20     4: tmt_n
 
-let tone_control_switch = Mem(kind: TEnum, values: words("OFF  ON  REVERSE")).repeat(4, 1)
+let tone_control_switch_values = words: """
+   OFF  ON  REVERSE
+"""
+let tone_control_switch = Mem(kind: TEnum, values: tone_control_switch_values).repeat(4, 1)
 let tone_control_switches = genMap:
   switch: tone_control_switch
 
@@ -527,7 +584,7 @@ let patch_tone_n = genMap:
   0x000e   reverb_send_mfx    TByte, 0, 127
   0x000f   chorus_send        TByte, 0, 127
   0x0010   reverb_send        TByte, 0, 127
-  0x0011   output_assign      TEnum, "MFX A --- --- ---", 1, 2, "--- --- --- --- --- ---"
+  0x0011   output_assign      TEnum, "MFX A --- --- ---  1  2  --- --- --- --- --- ---"
   rx:
     0x0012 bend               TBool
     0x0013 expression         TBool
@@ -795,7 +852,7 @@ let drum_tone_n = genMap:
   0x18    reverb_send               TByte, 0, 127
   0x19    chorus_send               TByte, 0, 127
   0x1a    reverb_send               TByte, 0, 127
-  0x1b    output_assign             TEnum, "MFX A --- --- --- 1 2 --- --- --- --- --- ---"
+  0x1b    output_assign             TEnum, "MFX A --- --- ---  1  2  --- --- --- --- --- ---"
   0x1c    bend_range                TByte, 0, 48
   rx:
     0x1d  expression                TBool
