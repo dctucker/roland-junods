@@ -9,6 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "midi": "^1.0.0"
+    "midi": "^1.0.4"
   }
 }

@@ -1,6 +1,5 @@
 const fs = require('fs');
 const midi = require('midi');
-const input = new midi.Input();
 
 const roland_sysex = [ 240, 65, 16, 0, 0, 58 ];
 
@@ -92,6 +91,9 @@ function is_drum(pc){
 	}
 }
 
+const input = new midi.Input();
+output = new midi.Output();
+
 input.on('message', (dt,m) => {
 	cmd = m.slice( roland_sysex.length, -1 );
 	if( starts_with(m, roland_sysex) && cmd[0] == 18 ){
@@ -126,10 +128,9 @@ input.on('message', (dt,m) => {
 		}
 	}
 });
-input.openPort(0);
+input.openPort(1);
 input.ignoreTypes(false,true,true);
-output = new midi.Output();
-output.openPort(0);
+output.openPort(1);
 
 query_all_pc = () => {
 	dt = 30;
