@@ -68,13 +68,17 @@ proc value*(kind: Kind, b: seq[byte]): int =
   else:
     result = b[0].int
 
+type
+  EnumList* = ref object
+    strings: seq[string]
+    name: string
 
 type
   Mem* = ref object # tree structure for describing areas of device memory
     offset*: JAddr
     case kind*: Kind
     of TEnum:
-      values*: seq[string]
+      values*: EnumList
     of TByte, TNibble, TNibblePair, TNibbleQuad:
       low*, high*: int
     else:
@@ -102,6 +106,13 @@ proc `$`*(mem: Mem): string=
   result &= mem.name
   if mem.kind != TNone:
     result &= "\t" & $mem.kind
+    case mem.kind
+    of TByte, TNibble, TNibblePair, TNibbleQuad:
+      result &= ", " & $mem.low & ", " & $mem.high
+    of TEnum:
+      result &= ", " & mem.values.name
+    else:
+      discard
   else:
     result &= ":"
   #if mem.area.len() > 0:
@@ -318,20 +329,72 @@ macro genMap(statement: untyped): untyped =
 
 ### values section
 
-let control_source_values = generate_control_source_values()
-let mfx_sys_values = words: SYS1 SYS2 SYS3 SYS4
-let mfx_control_source_values = control_source_values & mfx_sys_values
-let mfx_control_more_values = words: """
-  VELOCITY
-  KEYFOLLOW
-  TEMPO
-  LFO1
-  LFO2
-  PIT-ENV
-  TVF-ENV
-  TVA-ENV
-"""
-let matrix_control_source_values = mfx_control_source_values & mfx_control_more_values
+proc `&`*(a,b: EnumList): EnumList =
+  return EnumList(name: a.name & "_" & b.name, strings: a.strings & b.strings)
+
+macro defEnums(body: untyped): untyped =
+  result = newNimNode(nnkLetSection)
+  for cmd in body:
+    case cmd.kind
+    of nnkCall:
+      let name = cmd[0]
+      case cmd[1].kind
+      of nnkStmtList:
+        case cmd[1][0].kind
+        of nnkStrLit, nnkTripleStrLit:
+          let namestr = newStrLitNode(name.strVal())
+          let strings = cmd[1][0].strVal().splitWhitespace()
+          let enumlist = quote do:
+            EnumList(name: `namestr`, strings: @`strings`)
+          result.add newIdentDefs(name, newEmptyNode(), enumlist)
+        else:
+          unrecognized "defEnum = " & cmd.treeRepr
+      else:
+        unrecognized "defEnum = " & cmd.treeRepr
+    of nnkAsgn:
+      let name = cmd[0]
+      let namestr = newStrLitNode(name.strVal())
+      let value = cmd[1]
+      let enumlist = quote do:
+        EnumList(name: `namestr`, strings: `value`)
+      result.add newIdentDefs(name, newEmptyNode(), enumlist)
+    else:
+      unrecognized "defEnum = " & cmd.treeRepr
+  echo result.treeRepr
+
+defEnums:
+  control_source_values = generate_control_source_values()
+defEnums:
+  mfx_sys_values: """SYS1 SYS2 SYS3 SYS4"""
+defEnums:
+  mfx_control_source_values = control_source_values.strings & mfx_sys_values.strings
+  mfx_control_more_values: """
+    VELOCITY
+    KEYFOLLOW
+    TEMPO
+    LFO1
+    LFO2
+    PIT-ENV
+    TVF-ENV
+    TVA-ENV
+  """
+defEnums:
+  matrix_control_source_values = mfx_control_source_values.strings & mfx_control_more_values.strings
+
+#let control_source_values = generate_control_source_values()
+#let mfx_sys_values = words: SYS1 SYS2 SYS3 SYS4
+#let mfx_control_source_values = control_source_values & mfx_sys_values
+#let mfx_control_more_values = words: """
+#  VELOCITY
+#  KEYFOLLOW
+#  TEMPO
+#  LFO1
+#  LFO2
+#  PIT-ENV
+#  TVF-ENV
+#  TVA-ENV
+#"""
+#let matrix_control_source_values = mfx_control_source_values & mfx_control_more_values
 
 let parameters_20 = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(20, 4)
 let parameters_32 = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(32, 4)
@@ -364,7 +427,7 @@ let auto_pitch_key_values = words: """
   Cm   C#m   Dm   D#m   Em   Fm   F#m   Gm   G#m   A    Bbm   Bm
 """
 
-let auto_pitch_note_values = words: "C  C#  D  D#  E  F  F#  G  G#  A  A#  B"
+let auto_pitch_note_values = words: """C  C#  D  D#  E  F  F#  G  G#  A  A#  B"""
 
 let source_values = words: PERFORM  1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16
 let voice_reserves = Mem(kind: TByte, low: 0, high: 64).repeat(16, 1)
@@ -407,7 +470,7 @@ let control_source_more_values = words: """
   EQ-HIGH-FREQ
   EQ-HIGH-GAIN
 """
-let knob_assign_values = control_source_values & control_source_more_values
+let knob_assign_values = control_source_values.strings & control_source_more_values
 
 
 ### map definitions
