@@ -73,6 +73,16 @@ type
     strings: seq[string]
     name: string
 
+proc newEnumList(s: seq[string]): EnumList =
+    EnumList(strings: s)
+
+proc `&`*(a,b: EnumList): EnumList =
+  return EnumList(name: a.name & "_" & b.name, strings: a.strings & b.strings)
+
+proc `[]`*[I: Ordinal](a: EnumList, b: I): string =
+  return a.strings[b]
+
+
 type
   Mem* = ref object # tree structure for describing areas of device memory
     offset*: JAddr
@@ -191,6 +201,8 @@ macro words(stmts: untyped): untyped =
     @[]
   for word in get_all_command_ids(stmts):
     result[^1].add newLit(word)
+  return quote do:
+    EnumList( strings: `result` )
   #echo "output words = " & result.treeRepr
 
 proc diveMap(input: NimNode): seq[NimNode] {.compileTime.} =
@@ -240,8 +252,13 @@ proc diveMap(input: NimNode): seq[NimNode] {.compileTime.} =
         case input[2].kind
         of nnkPrefix, nnkCall, nnkIdent:
           let values = input[2]
-          result.add quote do:
-            Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values` )
+          if values.kind == nnkIdent:
+            result.add quote do:
+              Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values` )
+          else:
+            result.add quote do:
+              Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values`.newEnumList )
+
         #of nnkStmtList:
         #  let values = quote do:
         #    @[]
@@ -255,7 +272,7 @@ proc diveMap(input: NimNode): seq[NimNode] {.compileTime.} =
           for word in input[2].strVal().splitWhitespace():
             values[^1].add newLit(word)
           result.add quote do:
-            Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values` )
+            Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values`.newEnumList )
         else:
           unrecognized "TEnum values = " & input[2].treeRepr
       of "TBool", "TName", "TName16":
@@ -329,9 +346,6 @@ macro genMap(statement: untyped): untyped =
 
 ### values section
 
-proc `&`*(a,b: EnumList): EnumList =
-  return EnumList(name: a.name & "_" & b.name, strings: a.strings & b.strings)
-
 macro defEnums(body: untyped): untyped =
   result = newNimNode(nnkLetSection)
   for cmd in body:
@@ -355,19 +369,18 @@ macro defEnums(body: untyped): untyped =
       let name = cmd[0]
       let namestr = newStrLitNode(name.strVal())
       let value = cmd[1]
-      let enumlist = quote do:
-        EnumList(name: `namestr`, strings: `value`)
-      result.add newIdentDefs(name, newEmptyNode(), enumlist)
+      #echo "value = ", value.treeRepr
+      #let enumlist = quote do:
+      #  EnumList(name: `namestr`, strings: `value`)
+      result.add newIdentDefs(name, newEmptyNode(), value)
     else:
       unrecognized "defEnum = " & cmd.treeRepr
   echo result.treeRepr
 
-defEnums:
-  control_source_values = generate_control_source_values()
+let control_source_values = EnumList(name: "control_source_values", strings: generate_control_source_values())
 defEnums:
   mfx_sys_values: """SYS1 SYS2 SYS3 SYS4"""
-defEnums:
-  mfx_control_source_values = control_source_values.strings & mfx_sys_values.strings
+  mfx_control_source_values = control_source_values & mfx_sys_values
   mfx_control_more_values: """
     VELOCITY
     KEYFOLLOW
@@ -378,102 +391,90 @@ defEnums:
     TVF-ENV
     TVA-ENV
   """
-defEnums:
-  matrix_control_source_values = mfx_control_source_values.strings & mfx_control_more_values.strings
+  matrix_control_source_values = mfx_control_source_values & mfx_control_more_values
 
-#let control_source_values = generate_control_source_values()
-#let mfx_sys_values = words: SYS1 SYS2 SYS3 SYS4
-#let mfx_control_source_values = control_source_values & mfx_sys_values
-#let mfx_control_more_values = words: """
-#  VELOCITY
-#  KEYFOLLOW
-#  TEMPO
-#  LFO1
-#  LFO2
-#  PIT-ENV
-#  TVF-ENV
-#  TVA-ENV
-#"""
-#let matrix_control_source_values = mfx_control_source_values & mfx_control_more_values
+  output_assign_values: """A --- --- ---"""
+  matrix_control_dest_values: """
+    OFF   PCH   CUT   RES     LEV   PAN
+    DRY   CHO   REV   PIT-LFO1
+    PIT-LFO2  TVF-LFO1   TVF-LFO2
+    TVA-LFO1  TVA-LFO2   PAN-LFO1
+    PAN-LFO2  LFO1-RATE  LFO2-RATE
+    PIT-ATK   PIT-DCY    PIT-REL
+    TVF-ATK   TVF-DCY    TVF-REL
+    TVA-ATK   TVA-DCY    TVA-REL
+    TMT   FXM   FX1   MFX2    MFX3  MFX4
+  """
 
-let parameters_20 = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(20, 4)
-let parameters_32 = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(32, 4)
-let output_assign_values = words: """
-A --- --- ---
-"""
+  random_pitch_depth_values: """
+    0 1  2    3    4    5    6    7    8    9
+    10   20   30   40   50   60   70   80   90
+    100  200  300  400  500  600  700  800  900
+    1000 1100 1200
+  """
 
-let matrix_control_dest_values = words: """
-  OFF   PCH   CUT   RES     LEV   PAN
-  DRY   CHO   REV   PIT-LFO1
-  PIT-LFO2  TVF-LFO1   TVF-LFO2
-  TVA-LFO1  TVA-LFO2   PAN-LFO1
-  PAN-LFO2  LFO1-RATE  LFO2-RATE
-  PIT-ATK   PIT-DCY    PIT-REL
-  TVF-ATK   TVF-DCY    TVF-REL
-  TVA-ATK   TVA-DCY    TVA-REL
-  TMT   FXM   FX1   MFX2    MFX3  MFX4
-"""
+  tvf_filter_types: """OFF LPF BPF HPF PKG LPF2 LPF3"""
 
-let random_pitch_depth_values = words:
-  0 1  2    3    4    5    6    7    8    9
-  10   20   30   40   50   60   70   80   90
-  100  200  300  400  500  600  700  800  900
-  1000 1100 1200
+  auto_pitch_key_values: """
+    C    Db    D    Eb    E    F    F#    G    Ab    A    Bb    B
+    Cm   C#m   Dm   D#m   Em   Fm   F#m   Gm   G#m   A    Bbm   Bm
+  """
 
-let tvf_filter_types = words: OFF LPF BPF HPF PKG LPF2 LPF3
+  auto_pitch_note_values: """C  C#  D  D#  E  F  F#  G  G#  A  A#  B"""
 
-let auto_pitch_key_values = words: """
-  C    Db    D    Eb    E    F    F#    G    Ab    A    Bb    B
-  Cm   C#m   Dm   D#m   Em   Fm   F#m   Gm   G#m   A    Bbm   Bm
-"""
+  source_values: """PERFORM  1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16"""
 
-let auto_pitch_note_values = words: """C  C#  D  D#  E  F  F#  G  G#  A  A#  B"""
+  booster_values: "0  +6  +12  +18"
+  tone_control_switch_values: """
+     OFF  ON  REVERSE
+  """
 
-let source_values = words: PERFORM  1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16
-let voice_reserves = Mem(kind: TByte, low: 0, high: 64).repeat(16, 1)
+  polarity: """STANDARD REVERSE"""
+  pedal_assign_values: """
+    MODULATION
+    PORTA-TIME
+    VOLUME
+    PAN
+    EXPRESSION
+    HOLD
+    PORTAMENTO
+    SOSTENUTO
+    RESONANCE
+    RELEASE-TIME
+    ATTACK-TIME
+    CUTOFF
+    DECAY-TIME
+    VIB-RATE
+    VIB-DEPTH
+    VIB-DELAY
+    CHO-SEND-LEVEL
+    REV-SEND-LEVEL
+    AFTERTOUCH
+    START/STOP
+    TAP-TEMPO
+    PROG-UP
+    PROG-DOWN
+    FAV-UP
+    FAV-DOWN
+  """
 
-let polarity = words: STANDARD REVERSE
-let pedal_assign_values = words: """
-  MODULATION
-  PORTA-TIME
-  VOLUME
-  PAN
-  EXPRESSION
-  HOLD
-  PORTAMENTO
-  SOSTENUTO
-  RESONANCE
-  RELEASE-TIME
-  ATTACK-TIME
-  CUTOFF
-  DECAY-TIME
-  VIB-RATE
-  VIB-DEPTH
-  VIB-DELAY
-  CHO-SEND-LEVEL
-  REV-SEND-LEVEL
-  AFTERTOUCH
-  START/STOP
-  TAP-TEMPO
-  PROG-UP
-  PROG-DOWN
-  FAV-UP
-  FAV-DOWN
-"""
-
-let control_source_more_values = words: """
-  EQ-LOW-FREQ
-  EQ-LOW-GAIN
-  EQ-MID-FREQ
-  EQ-MID-GAIN
-  EQ-MID-Q
-  EQ-HIGH-FREQ
-  EQ-HIGH-GAIN
-"""
-let knob_assign_values = control_source_values.strings & control_source_more_values
+  control_source_more_values: """
+    EQ-LOW-FREQ
+    EQ-LOW-GAIN
+    EQ-MID-FREQ
+    EQ-MID-GAIN
+    EQ-MID-Q
+    EQ-HIGH-FREQ
+    EQ-HIGH-GAIN
+  """
+  knob_assign_values = control_source_values & control_source_more_values
 
 
 ### map definitions
+
+let voice_reserves = Mem(kind: TByte, low: 0, high: 64).repeat(16, 1)
+let parameters_20 = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(20, 4)
+let parameters_32 = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(32, 4)
 
 let scale_map = genMap:
   0x00  "c"   TByte, 0, 127   # -64 .. +63
@@ -609,7 +610,6 @@ let tmt_n = genMap:
   1 keyboard:     keyboard_ranges
   5 velocity:     velocity_ranges
 
-let booster_values = words: "0  +6  +12  +18"
 let tmt = genMap:
   "1-2":
     0x00   structure_type     TByte, 0, 9
@@ -623,9 +623,6 @@ let tmt = genMap:
   0x17     3: tmt_n
   0x20     4: tmt_n
 
-let tone_control_switch_values = words: """
-   OFF  ON  REVERSE
-"""
 let tone_control_switch = Mem(kind: TEnum, values: tone_control_switch_values).repeat(4, 1)
 let tone_control_switches = genMap:
   switch: tone_control_switch
