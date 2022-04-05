@@ -3,6 +3,7 @@ import strutils
 import cache
 import memorymap
 import nteract
+import values
 
 type
   JunoNteract* = ref object of Nteract
