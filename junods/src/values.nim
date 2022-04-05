@@ -1,3 +1,4 @@
+import system/io
 import macros
 import strutils
 
@@ -22,7 +23,20 @@ proc `$`*(e: EnumList): string =
   return e.name
 
 
+import std/tables
+
+proc generate_control_source_values(): seq[string] {.compileTime.} =
+  result.add("OFF")
+  for i in 1 .. 31:
+    result.add("CC" & $i)
+  for i in 33 .. 95:
+    result.add("CC" & $i)
+  result.add("BEND")
+  result.add("AFT")
+let control_sources {.compileTime.} = generate_control_source_values()
+
 macro defEnums(body: untyped): untyped =
+  var all = newTable[string, seq[string]]()
   result = newNimNode(nnkLetSection)
   for cmd in body:
     case cmd.kind
@@ -38,6 +52,7 @@ macro defEnums(body: untyped): untyped =
           let enumlist = quote do:
             EnumList(name: `namestr`, strings: @`strings`)
           result.add newIdentDefs(name, newEmptyNode(), enumlist)
+          all[cmd[0].strVal()] = strings
         else:
           unrecognized "defEnum = " & cmd.treeRepr
       else:
@@ -47,22 +62,16 @@ macro defEnums(body: untyped): untyped =
       let namestr = newStrLitNode(cmd[0].strVal())
       let value = cmd[1]
       result.add newIdentDefs(name, newEmptyNode(), value)
+      echo value.treeRepr
+      all[cmd[0].strVal()] = value.static # https://forum.nim-lang.org/t/3038
     else:
       unrecognized "defEnum = " & cmd.treeRepr
   #echo result.treeRepr
 
 
-proc generate_control_source_values(): seq[string] {.compileTime.} =
-  result.add("OFF")
-  for i in 1 .. 31:
-    result.add("CC" & $i)
-  for i in 33 .. 95:
-    result.add("CC" & $i)
-  result.add("BEND")
-  result.add("AFT")
 
 defEnums:
-  control_source_values = EnumList(name: "control_source_values", strings: generate_control_source_values())
+  control_source_values = control_sources
   mfx_sys_values: """
     SYS1  SYS2  SYS3  SYS4
   """
