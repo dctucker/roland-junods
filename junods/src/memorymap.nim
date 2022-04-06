@@ -153,32 +153,32 @@ proc id_string(input: NimNode): string {.compileTime.} =
     unrecognized "id = " & input[1].treeRepr
     ""
 
-proc get_all_command_ids(cmd: NimNode): seq[string] {.compileTime.} =
-  result = @[]
-  for id in cmd:
-    case id.kind
-    of nnkCommand, nnkPrefix:
-      for id2 in get_all_command_ids(id):
-        result.add id2
-    of nnkIdent, nnkStrLit:
-      result.add id.id_string()
-    of nnkIntLit:
-      result.add $id.intVal()
-    of nnkTripleStrLit:
-      for str in id.strVal().splitWhitespace():
-        result.add str
-    else:
-      unrecognized "word id = " & $id.kind
+#proc get_all_command_ids(cmd: NimNode): seq[string] {.compileTime.} =
+#  result = @[]
+#  for id in cmd:
+#    case id.kind
+#    of nnkCommand, nnkPrefix:
+#      for id2 in get_all_command_ids(id):
+#        result.add id2
+#    of nnkIdent, nnkStrLit:
+#      result.add id.id_string()
+#    of nnkIntLit:
+#      result.add $id.intVal()
+#    of nnkTripleStrLit:
+#      for str in id.strVal().splitWhitespace():
+#        result.add str
+#    else:
+#      unrecognized "word id = " & $id.kind
 
-macro words(stmts: untyped): untyped =
-  #echo "input words = " & stmts.treeRepr
-  result = quote do:
-    @[]
-  for word in get_all_command_ids(stmts):
-    result[^1].add newLit(word)
-  return quote do:
-    EnumList( strings: `result` )
-  #echo "output words = " & result.treeRepr
+#macro words(stmts: untyped): untyped =
+#  #echo "input words = " & stmts.treeRepr
+#  result = quote do:
+#    @[]
+#  for word in get_all_command_ids(stmts):
+#    result[^1].add newLit(word)
+#  return quote do:
+#    EnumList( strings: `result` )
+#  #echo "output words = " & result.treeRepr
 
 proc diveMap(input: NimNode): seq[NimNode] {.compileTime.} =
   result = @[]
@@ -233,7 +233,6 @@ proc diveMap(input: NimNode): seq[NimNode] {.compileTime.} =
           else:
             result.add quote do:
               Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: EnumList(strings: `values`) )
-
         #of nnkStmtList:
         #  let values = quote do:
         #    @[]

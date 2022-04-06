@@ -1,9 +1,12 @@
 import system/io
 import macros
 import strutils
+import sequtils
 
 proc unrecognized(args: varargs[string]) {.compileTime.} =
   echo "unrecognized: ", args.join(" ")
+
+type CArray = array[0..127, string]
 
 type
   EnumList* = ref object
@@ -35,6 +38,7 @@ proc generate_control_source_values(): seq[string] {.compileTime.} =
   result.add("AFT")
 let control_sources {.compileTime.} = generate_control_source_values()
 
+
 macro defEnums(body: untyped): untyped =
   var all = newTable[string, seq[string]]()
   result = newNimNode(nnkLetSection)
@@ -62,16 +66,51 @@ macro defEnums(body: untyped): untyped =
       let namestr = newStrLitNode(cmd[0].strVal())
       let value = cmd[1]
       result.add newIdentDefs(name, newEmptyNode(), value)
-      echo value.treeRepr
-      all[cmd[0].strVal()] = value.static # https://forum.nim-lang.org/t/3038
+      #echo "defEnum value = " & value.treeRepr
+      case value.kind
+      of nnkIdent:
+        all[ cmd[0].strVal() ] = all[ cmd[1].strVal() ]
+      of nnkObjConstr:
+        all[ cmd[0].strVal() ] = @[] #value[^1][^1]
+      of nnkInfix:
+        case value[2].kind
+        of nnkIdent:
+          all[ cmd[0].strVal() ] = all[ value[1].strVal() ] & all[ value[2].strVal() ]
+        of nnkStrLit:
+          all[ cmd[0].strVal() ] = all[ value[1].strVal() ] & value[2].strVal()
+        else:
+          unrecognized "defEnum value = " & value.treeRepr
+      else:
+        unrecognized "defEnum value = " & value.treeRepr
+      #all[cmd[0].strVal()] = value.static # https://forum.nim-lang.org/t/3038
     else:
       unrecognized "defEnum = " & cmd.treeRepr
   #echo result.treeRepr
 
+  result = newNimNode(nnkLetSection)
+  var c_lines: seq[string] = @[]
+  for key,values in all.pairs():
+    var str = "const char *" & key & "[] = { "
+    str &= values.map(proc(x:string):string = "\"" & x & "\"").join(",")
+    str &= " };"
+    c_lines.add str
+
+    let name = ident(key)
+    let namestr = newStrLitNode(key)
+    let num = newIntLitNode(values.len())
+    let letter = quote do:
+      let `name`* {.importc: `namestr`, header: "values.c" .}: array[`num`, cstring]
+    result.add letter[0]
+    #var mfx_control_source_values* {.header:"values.c", importc: "mfx_control_source_values".}: CArray
+
+  "values.c".writeFile(c_lines.join("\n"))
+  #result.add newIdentDefs(ident("a"), newEmptyNode(), newStrLitNode(""))
+
 
 
 defEnums:
-  control_source_values = control_sources
+  control_sources_enum_list = EnumList(name: "control_sources", strings: control_sources)
+  control_source_values = control_sources_enum_list
   mfx_sys_values: """
     SYS1  SYS2  SYS3  SYS4
   """
@@ -170,5 +209,6 @@ defEnums:
   output_assign_tone_values = output_assign_values & "TONE"
   output_assign_part_values = output_assign_values & "PART"
   off_on_patch_values: """
-    OFF ON PATCH
+    OFF  ON  PATCH
   """
+
