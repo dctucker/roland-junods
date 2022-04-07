@@ -1,4 +1,4 @@
-import strutils
+from strutils import toHex, toLower, join, splitWhitespace, contains
 import macros
 
 import values
@@ -84,12 +84,12 @@ type
     area*:  seq[Mem]
   MemArea* = seq[Mem]
 
-proc format(mem: Mem, level: int): string =
-  if level > 1: return ""
-  for m in mem.area:
-    result &= indent( m.format(level), level*4 )
+#proc format(mem: Mem, level: int): string =
+#  if level > 1: return ""
+#  for m in mem.area:
+#    result &= indent( m.format(level), level*4 )
 
-proc `$`*(mem: Mem): string=
+proc `$`*(mem: Mem): string =
   result &= $mem.offset
   if mem.offset != NOFF:
     result &= " "
@@ -108,6 +108,10 @@ proc `$`*(mem: Mem): string=
 
 proc value*(mem: Mem, b: seq[byte]): int =
   result = mem.kind.value(b)
+
+
+
+### macros section
 
 macro repeat(thing: MemArea, n, span: static[int]): seq[Mem] =
   result = quote do: @[]
@@ -136,173 +140,143 @@ macro repeat(kind: Kind, n, span: static[int]): seq[Mem] =
     let offset = newIntLitNode(span * i)
     result.add quote do: Mem( offset: `offset`.JAddr, name: `name`, kind: `kind`)
 
+macro genMap(statement: untyped): untyped =
 
+  proc unrecognized(args: varargs[string]) {.compileTime.} =
+    echo "unrecognized: ", args.join(" ")
 
-### macros section
-
-proc unrecognized(args: varargs[string]) {.compileTime.} =
-  echo "unrecognized: ", args.join(" ")
-
-proc id_string(input: NimNode): string {.compileTime.} =
-  result = case input.kind
-  of nnkIntLit:
-    $input.intVal()
-  of nnkStrLit, nnkIdent:
-    input.strVal()
-  else:
-    unrecognized "id = " & input[1].treeRepr
-    ""
-
-#proc get_all_command_ids(cmd: NimNode): seq[string] {.compileTime.} =
-#  result = @[]
-#  for id in cmd:
-#    case id.kind
-#    of nnkCommand, nnkPrefix:
-#      for id2 in get_all_command_ids(id):
-#        result.add id2
-#    of nnkIdent, nnkStrLit:
-#      result.add id.id_string()
-#    of nnkIntLit:
-#      result.add $id.intVal()
-#    of nnkTripleStrLit:
-#      for str in id.strVal().splitWhitespace():
-#        result.add str
-#    else:
-#      unrecognized "word id = " & $id.kind
-
-#macro words(stmts: untyped): untyped =
-#  #echo "input words = " & stmts.treeRepr
-#  result = quote do:
-#    @[]
-#  for word in get_all_command_ids(stmts):
-#    result[^1].add newLit(word)
-#  return quote do:
-#    EnumList( strings: `result` )
-#  #echo "output words = " & result.treeRepr
-
-proc diveMap(input: NimNode): seq[NimNode] {.compileTime.} =
-  result = @[]
-  #echo input.kind
-  case input.kind
-  of nnkStmtList:
-    if input.len() == 1 and input[0].kind == nnkStmtList:
-      result.add input[0]
-    else:
-      for stmt in input:
-        for s in diveMap(stmt):
-          result.add s
-  of nnkCommand:
-    var offset: BiggestInt = -1
-    if input[0].kind == nnkIntLit:
-      offset = input[0].intVal()
-    let name = case input[1].kind
+  proc id_string(input: NimNode): string {.compileTime.} =
+    result = case input.kind
     of nnkIntLit:
-      $input[1].intVal()
+      $input.intVal()
     of nnkStrLit, nnkIdent:
-      input[1].strVal()
-    of nnkCommand:
-      case input[1][0].kind
-      of nnkIntLit:
-        $input[1][0].intVal()
-      of nnkStrLit, nnkIdent:
-        input[1][0].strVal()
-      else:
-        unrecognized "id = " & input[1].treeRepr
-        ""
+      input.strVal()
     else:
       unrecognized "id = " & input[1].treeRepr
       ""
 
-    if input[1].kind == nnkCommand:
-      let kind_str = input[1][1].strVal()
-      let kind = kind_str.ident
-      case kind_str
-      of "TNibbleQuad","TNibblePair","TNibble","TByte":
-        input.expectLen(4)
-        let low  = input[2]
-        let high = input[3]
-        result.add quote do:
-          Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, low: `low`, high: `high` )
-      of "TEnum":
-        case input[2].kind
-        of nnkPrefix, nnkCall, nnkIdent:
-          let values = input[2]
-          if values.kind == nnkIdent:
-            result.add quote do:
-              Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values` )
-          else:
+  proc diveMap(input: NimNode): seq[NimNode] {.compileTime.} =
+    result = @[]
+    #echo input.kind
+    case input.kind
+    of nnkStmtList:
+      if input.len() == 1 and input[0].kind == nnkStmtList:
+        result.add input[0]
+      else:
+        for stmt in input:
+          for s in diveMap(stmt):
+            result.add s
+    of nnkCommand:
+      var offset: BiggestInt = -1
+      if input[0].kind == nnkIntLit:
+        offset = input[0].intVal()
+      let name = case input[1].kind
+      of nnkIntLit:
+        $input[1].intVal()
+      of nnkStrLit, nnkIdent:
+        input[1].strVal()
+      of nnkCommand:
+        case input[1][0].kind
+        of nnkIntLit:
+          $input[1][0].intVal()
+        of nnkStrLit, nnkIdent:
+          input[1][0].strVal()
+        else:
+          unrecognized "id = " & input[1].treeRepr
+          ""
+      else:
+        unrecognized "id = " & input[1].treeRepr
+        ""
+
+      if input[1].kind == nnkCommand:
+        let kind_str = input[1][1].strVal()
+        let kind = kind_str.ident
+        case kind_str
+        of "TNibbleQuad","TNibblePair","TNibble","TByte":
+          input.expectLen(4)
+          let low  = input[2]
+          let high = input[3]
+          result.add quote do:
+            Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, low: `low`, high: `high` )
+        of "TEnum":
+          case input[2].kind
+          of nnkPrefix, nnkCall, nnkIdent:
+            let values = input[2]
+            if values.kind == nnkIdent:
+              result.add quote do:
+                Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values` )
+            else:
+              result.add quote do:
+                Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: EnumList(strings: `values`) )
+          #of nnkStmtList:
+          #  let values = quote do:
+          #    @[]
+          #  for word in get_all_command_ids(input[2]):
+          #    values[^1].add newLit(word)
+          #  result.add quote do:
+          #    Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values` )
+          of nnkStrLit, nnkTripleStrLit:
+            let values = quote do:
+              @[]
+            for word in input[2].strVal().splitWhitespace():
+              values[^1].add quote do:
+                `word`.cstring
             result.add quote do:
               Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: EnumList(strings: `values`) )
-        #of nnkStmtList:
-        #  let values = quote do:
-        #    @[]
-        #  for word in get_all_command_ids(input[2]):
-        #    values[^1].add newLit(word)
-        #  result.add quote do:
-        #    Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values` )
-        of nnkStrLit, nnkTripleStrLit:
-          let values = quote do:
-            @[]
-          for word in input[2].strVal().splitWhitespace():
-            values[^1].add quote do:
-              `word`.cstring
+          else:
+            unrecognized "TEnum values = " & input[2].treeRepr
+        of "TBool", "TName", "TName16":
           result.add quote do:
-            Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: EnumList(strings: `values`) )
+            Mem( offset: JAddr(`offset`), name: `name`, kind: `kind` )
         else:
-          unrecognized "TEnum values = " & input[2].treeRepr
-      of "TBool", "TName", "TName16":
-        result.add quote do:
-          Mem( offset: JAddr(`offset`), name: `name`, kind: `kind` )
-      else:
-        #let area = input[1][1]
-        #result.add quote do:
-        #  Mem( offset: JAddr(`offset`), name: `name`, area: `area` )
-        unrecognized "mem = " & kind.treeRepr
+          #let area = input[1][1]
+          #result.add quote do:
+          #  Mem( offset: JAddr(`offset`), name: `name`, area: `area` )
+          unrecognized "mem = " & kind.treeRepr
 
-    elif input.len() >= 3:
-      for area in diveMap(input[2]):
-        #echo "area = " , area.treeRepr
-        case area.kind
+      elif input.len() >= 3:
+        for area in diveMap(input[2]):
+          #echo "area = " , area.treeRepr
+          case area.kind
+          of nnkBracket:
+            result.add quote do:
+              Mem( offset: JAddr(`offset`), name: `name`, area: @`area`)
+          of nnkIdent, nnkPrefix:
+            result.add quote do:
+              Mem( offset: JAddr(`offset`), name: `name`, area: `area`)
+          of nnkObjConstr:
+            result.add quote do:
+              Mem( offset: JAddr(`offset`), name: `name`, area: @[`area`])
+          else:
+            echo "unexpected kind = " & area.treeRepr
+      else:
+        if not name.contains("reserved"):
+          result.add quote do:
+            Mem( offset: JAddr(`offset`), name: `name`)
+      #echo "name = " & name.repr
+    of nnkCall:
+      let name = newLit input[0].id_string()
+      result.add quote do:
+        Mem( offset: NOFF, name: `name`, area: @[])
+      input[0].expectKind {nnkIdent, nnkStrLit, nnkIntLit}
+      for stmtlist in diveMap(input[1]):
+        case stmtlist.kind
         of nnkBracket:
-          result.add quote do:
-            Mem( offset: JAddr(`offset`), name: `name`, area: @`area`)
-        of nnkIdent, nnkPrefix:
-          result.add quote do:
-            Mem( offset: JAddr(`offset`), name: `name`, area: `area`)
+          for stmt in stmtlist:
+            result[^1][^1][^1][^1].add(stmt)
+        of nnkIdent:
+          result[^1][^1][^1] = stmtlist
         of nnkObjConstr:
-          result.add quote do:
-            Mem( offset: JAddr(`offset`), name: `name`, area: @[`area`])
+          result[^1][^1][^1][^1].add(stmtlist)
         else:
-          echo "unexpected kind = " & area.treeRepr
+          echo "stmtlist kind = " & $stmtlist.kind
+          result[^1][^1][^1][^1].add(stmtlist)
+    of nnkIdent:
+      result.add input
     else:
-      if not name.contains("reserved"):
-        result.add quote do:
-          Mem( offset: JAddr(`offset`), name: `name`)
-    #echo "name = " & name.repr
-  of nnkCall:
-    let name = newLit input[0].id_string()
-    result.add quote do:
-      Mem( offset: NOFF, name: `name`, area: @[])
-    input[0].expectKind {nnkIdent, nnkStrLit, nnkIntLit}
-    for stmtlist in diveMap(input[1]):
-      case stmtlist.kind
-      of nnkBracket:
-        for stmt in stmtlist:
-          result[^1][^1][^1][^1].add(stmt)
-      of nnkIdent:
-        result[^1][^1][^1] = stmtlist
-      of nnkObjConstr:
-        result[^1][^1][^1][^1].add(stmtlist)
-      else:
-        echo "stmtlist kind = " & $stmtlist.kind
-        result[^1][^1][^1][^1].add(stmtlist)
-  of nnkIdent:
-    result.add input
-  else:
-    result.add quote do:
-      `input`
+      result.add quote do:
+        `input`
 
-macro genMap(statement: untyped): untyped =
   #echo "input ast = " & statement.treeRepr
   var bracket = quote do:
     []
@@ -317,7 +291,6 @@ macro genMap(statement: untyped): untyped =
     @`bracket`
   #echo "output ast = " & result.treeRepr
   #echo result.repr
-
 
 
 

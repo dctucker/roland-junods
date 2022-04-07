@@ -1,7 +1,7 @@
-import system/io
+from strutils import join, toLower, splitWhitespace
+from sequtils import map
+from system/io import writeFile
 import macros
-import strutils
-import sequtils
 
 proc unrecognized(args: varargs[string]) {.compileTime.} =
   echo "unrecognized: ", args.join(" ")

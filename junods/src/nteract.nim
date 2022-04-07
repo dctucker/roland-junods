@@ -1,4 +1,4 @@
-import std/terminal
+from std/terminal import getch
 
 type
   State = ref object

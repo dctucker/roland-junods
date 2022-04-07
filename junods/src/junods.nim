@@ -3,7 +3,7 @@ import junonteract
 import cache
 
 import memorymap
-import strutils
+from strutils import join, indent
 
 proc traverse(mem: Mem, offset: JAddr, path: seq[string]) =
   let level = path.len
