@@ -29,16 +29,16 @@ proc visit(mem: Mem, level: int = 0) =
   for area in mem.area:
     visit area, level + 1
 
-when isMainModule:
-  visit juno_map
-
 #when isMainModule:
-#  initCache()
-#  #visit juno_map
-#  let nt = newJunoNteract()
-#  let input = nt.getUserInput()
-#  echo input
-#  ##for area in nt.areas[^1]:
-#  ##  echo area.name
-#  #traverse(juno_map, 0.JAddr, @[])
+#  visit juno_map
+
+when isMainModule:
+  initCache()
+  #visit juno_map
+  let nt = newJunoNteract()
+  let input = nt.getUserInput()
+  echo input
+  ##for area in nt.areas[^1]:
+  ##  echo area.name
+  #traverse(juno_map, 0.JAddr, @[])
 

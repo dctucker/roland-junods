@@ -10,17 +10,17 @@ type CArray = array[0..127, string]
 
 type
   EnumList* = ref object
-    strings*: seq[string]
+    strings*: seq[cstring]
     name: string
 
 proc `&`*(a,b: EnumList): EnumList =
   return EnumList(name: a.name & "_" & b.name, strings: a.strings & b.strings)
 
 proc `&`*(a: EnumList, b: string): EnumList =
-  return EnumList(name: a.name & "_" & b.toLower, strings: a.strings & @[b])
+  return EnumList(name: a.name & "_" & b.toLower, strings: a.strings & @[b.cstring])
 
 proc `[]`*[I: Ordinal](a: EnumList, b: I): string =
-  return a.strings[b]
+  return $a.strings[b]
 
 proc `$`*(e: EnumList): string =
   return e.name
@@ -95,16 +95,18 @@ macro defEnums(body: untyped): untyped =
     str &= " };"
     c_lines.add str
 
-    let name = ident(key)
+    let id = ident(key & "_a")
+    let id_seq = ident(key)
     let namestr = newStrLitNode(key)
     let num = newIntLitNode(values.len())
     let letter = quote do:
-      let `name`* {.importc: `namestr`, header: "values.c" .}: array[`num`, cstring]
-    result.add letter[0]
-    #var mfx_control_source_values* {.header:"values.c", importc: "mfx_control_source_values".}: CArray
+      let
+        `id`* {.importc: `namestr`, header: "values.c" .}: array[`num`, cstring]
+        `id_seq`* = EnumList( name: `namestr`, strings: @`id` )
+    for l in letter:
+      result.add l
 
-  "values.c".writeFile(c_lines.join("\n"))
-  #result.add newIdentDefs(ident("a"), newEmptyNode(), newStrLitNode(""))
+  "src/values.c".writeFile(c_lines.join("\n"))
 
 
 

@@ -244,7 +244,8 @@ proc diveMap(input: NimNode): seq[NimNode] {.compileTime.} =
           let values = quote do:
             @[]
           for word in input[2].strVal().splitWhitespace():
-            values[^1].add newLit(word)
+            values[^1].add quote do:
+              `word`.cstring
           result.add quote do:
             Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: EnumList(strings: `values`) )
         else:
