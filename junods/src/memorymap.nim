@@ -71,7 +71,7 @@ proc value*(kind: Kind, b: seq[byte]): int =
     result = b[0].int
 
 type
-  Mem* = ref object # tree structure for describing areas of device memory
+  MemObj* = object # tree structure for describing areas of device memory
     offset*: JAddr
     case kind*: Kind
     of TEnum:
@@ -82,6 +82,7 @@ type
       discard
     name*:   string
     area*:  seq[Mem]
+  Mem* = ref MemObj
   MemArea* = seq[Mem]
 
 #proc format(mem: Mem, level: int): string =
@@ -112,6 +113,15 @@ proc value*(mem: Mem, b: seq[byte]): int =
 
 
 ### macros section
+
+macro repeat(thing: seq[MemObj], n, span: static[int]): seq[MemObj] =
+  result = quote do: @[]
+  for i in 0..<n:
+    let name = newStrLitNode $(i + 1)
+    let offset = newIntLitNode(span * i)
+    let offset_node = quote do: `offset`.JAddr
+    result[^1].add quote do:
+      MemObj( offset: `offset`.JAddr, name: `name`, area: `thing`)
 
 macro repeat(thing: MemArea, n, span: static[int]): seq[Mem] =
   result = quote do: @[]
@@ -157,6 +167,7 @@ macro genMap(statement: untyped): untyped =
 
   proc diveMap(input: NimNode): seq[NimNode] {.compileTime.} =
     result = @[]
+    let class = ident("MemObj")
     #echo input.kind
     case input.kind
     of nnkStmtList:
@@ -197,24 +208,17 @@ macro genMap(statement: untyped): untyped =
           let low  = input[2]
           let high = input[3]
           result.add quote do:
-            Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, low: `low`, high: `high` )
+            `class`( offset: JAddr(`offset`), name: `name`, kind: `kind`, low: `low`, high: `high` )
         of "TEnum":
           case input[2].kind
           of nnkPrefix, nnkCall, nnkIdent:
             let values = input[2]
             if values.kind == nnkIdent:
               result.add quote do:
-                Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values` )
+                `class`( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values` )
             else:
               result.add quote do:
-                Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: EnumList(strings: `values`) )
-          #of nnkStmtList:
-          #  let values = quote do:
-          #    @[]
-          #  for word in get_all_command_ids(input[2]):
-          #    values[^1].add newLit(word)
-          #  result.add quote do:
-          #    Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values` )
+                `class`( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: EnumList(strings: `values`) )
           of nnkStrLit, nnkTripleStrLit:
             let values = quote do:
               @[]
@@ -222,16 +226,13 @@ macro genMap(statement: untyped): untyped =
               values[^1].add quote do:
                 `word`.cstring
             result.add quote do:
-              Mem( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: EnumList(strings: `values`) )
+              `class`( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: EnumList(strings: `values`) )
           else:
             unrecognized "TEnum values = " & input[2].treeRepr
         of "TBool", "TName", "TName16":
           result.add quote do:
-            Mem( offset: JAddr(`offset`), name: `name`, kind: `kind` )
+            `class`( offset: JAddr(`offset`), name: `name`, kind: `kind` )
         else:
-          #let area = input[1][1]
-          #result.add quote do:
-          #  Mem( offset: JAddr(`offset`), name: `name`, area: `area` )
           unrecognized "mem = " & kind.treeRepr
 
       elif input.len() >= 3:
@@ -240,24 +241,24 @@ macro genMap(statement: untyped): untyped =
           case area.kind
           of nnkBracket:
             result.add quote do:
-              Mem( offset: JAddr(`offset`), name: `name`, area: @`area`)
+              `class`( offset: JAddr(`offset`), name: `name`, area: @`area`)
           of nnkIdent, nnkPrefix:
             result.add quote do:
-              Mem( offset: JAddr(`offset`), name: `name`, area: `area`)
+              `class`( offset: JAddr(`offset`), name: `name`, area: `area`)
           of nnkObjConstr:
             result.add quote do:
-              Mem( offset: JAddr(`offset`), name: `name`, area: @[`area`])
+              `class`( offset: JAddr(`offset`), name: `name`, area: @[`area`])
           else:
             echo "unexpected kind = " & area.treeRepr
       else:
         if not name.contains("reserved"):
           result.add quote do:
-            Mem( offset: JAddr(`offset`), name: `name`)
+            `class`( offset: JAddr(`offset`), name: `name`)
       #echo "name = " & name.repr
     of nnkCall:
       let name = newLit input[0].id_string()
       result.add quote do:
-        Mem( offset: NOFF, name: `name`, area: @[])
+        `class`( offset: NOFF, name: `name`, area: @[])
       input[0].expectKind {nnkIdent, nnkStrLit, nnkIntLit}
       for stmtlist in diveMap(input[1]):
         case stmtlist.kind
@@ -292,6 +293,15 @@ macro genMap(statement: untyped): untyped =
   #echo "output ast = " & result.treeRepr
   #echo result.repr
 
+
+## make a macro generate this:
+#static const capmix_mem_t const *my_area[] = {
+#	&(const capmix_mem_t){.offset = 0, .name = "first", .area = (const capmix_mem_t*[]){
+#		&(const capmix_mem_t){.offset=1, .name="second"},
+#		&(const capmix_mem_t){ .offset=-1 }
+#	}},
+#	&(const capmix_mem_t){ .offset=-1 }
+#};
 
 
 ### map definitions
