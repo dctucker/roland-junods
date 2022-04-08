@@ -306,23 +306,52 @@ macro genMap(statement: untyped): untyped =
 macro genCMap(calls: untyped): untyped =
   let mem_t  = "&(const capmix_mem_t)"
   let area_t = "&(const capmix_mem_t *[])"
-  var source: seq[string] = @[]
+  var source: seq[string] = @["#include \"cmap.h\"\n"]
+
+  proc kind_spec(kind: string, c: seq[NimNode]): string =
+    result = ".kind = " & kind & ", "
+    case kind
+    of "TByte","TNibble","TNibblePair","TNibbleQuad":
+      result &= ".low = "  & $c[0].intVal() & ", "
+      result &= ".high = " & $c[1].intVal() & ", "
+    of "TEnum":
+      result &= ".values = " & $c[0].strVal() & ", "
+    else:
+      unrecognized "getCMap kind = " & kind
+
+  proc repeat_kind[T: Ordinal](kind_spec: string, times, span: T): string =
+    for i in 0..<times:
+      let name = $(i + 1)
+      result &= mem_t & "{ .name = \"" & name & "\", "
+      result &= kind_spec & " }, "
 
   proc parseOuter(list: NimNode) =
+    list.expectKind nnkStmtList
+    echo list.treeRepr
     for c in list:
-      echo c.treeRepr
       c.expectKind({nnkCall, nnkCommand})
-      var line = "\t" & mem_t & "{"
-      line &= ".offset = 0x" & c[0].intVal().toHex(8).toLower() & ", "
-      c[1].expectKind(nnkCommand)
-      line &= ".name = \"" & c[1][0].id_string() & "\", "
-      line &= ".kind = " & c[1][1].strVal() & ", "
-      line &= ".low = "  & $c[2].intVal() & ", "
-      line &= ".high = " & $c[3].intVal() & ", "
-      line &= "},"
+      var line = "\t"
+      let first = c[0]
+      case first.kind
+      of nnkIntLit:
+        line &= mem_t & "{"
+        line &= ".offset = 0x" & c[0].intVal().toHex(8).toLower() & ", "
+        c[1].expectKind(nnkCommand)
+        let kind_str = c[1][1].strVal()
+        line &= ".name = \"" & c[1][0].id_string() & "\", "
+        line &= kind_spec(kind_str, c[2..^1])
+        line &= "},"
+      of nnkCall:
+        if first[0].kind == nnkIdent and first[0].strVal() == "repeat":
+          let times = first[1].intVal()
+          let span = first[2].intVal()
+          let kind = c[1].strVal()
+          line &= repeat_kind( kind_spec(kind, c[2..^1]), times, span )
+      else:
+        unrecognized "getCMap first = " & first.treeRepr
+
       source.add line
 
-  source.add "#include \"cmap.h\"\n"
   calls.expectKind(nnkStmtList)
   for call in calls:
     call.expectKind(nnkCall)
@@ -347,7 +376,27 @@ genCMap:
     0x09  "a"   TByte, 0, 127   # -64 .. +63
     0x0a  "a#"  TByte, 0, 127   # -64 .. +63
     0x0b  "b"   TByte, 0, 127   # -64 .. +63
+  voice_reserves:
+    repeat(16, 1) TByte, 0, 64
+  parameters_20:
+    repeat(20, 4) TNibbleQuad, 12768, 52768
 
+  midi_n:
+    rx:
+      0x00   pc                 TBool
+      0x01   bank               TBool
+      0x02   bend               TBool
+      0x03   key_pressure       TBool
+      0x04   channel_pressure   TBool
+      0x05   modulation         TBool
+      0x06   volume             TBool
+      0x07   pan                TBool
+      0x08   expression         TBool
+      0x09   hold_1             TBool
+    0x0a   phase_lock           TBool
+    0x0b   velocity_curve_type  TByte, 0, 4 # 0=OFF
+  midis:
+    repeat(16, 0x100) midi_n
 
 ### map definitions
 
