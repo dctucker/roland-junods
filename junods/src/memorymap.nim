@@ -150,20 +150,20 @@ macro repeat(kind: Kind, n, span: static[int]): seq[Mem] =
     let offset = newIntLitNode(span * i)
     result.add quote do: Mem( offset: `offset`.JAddr, name: `name`, kind: `kind`)
 
+proc unrecognized(args: varargs[string]) {.compileTime.} =
+  echo "unrecognized: ", args.join(" ")
+
+proc id_string(input: NimNode): string {.compileTime.} =
+  result = case input.kind
+  of nnkIntLit:
+    $input.intVal()
+  of nnkStrLit, nnkIdent:
+    input.strVal()
+  else:
+    unrecognized "id = " & input[1].treeRepr
+    ""
+
 macro genMap(statement: untyped): untyped =
-
-  proc unrecognized(args: varargs[string]) {.compileTime.} =
-    echo "unrecognized: ", args.join(" ")
-
-  proc id_string(input: NimNode): string {.compileTime.} =
-    result = case input.kind
-    of nnkIntLit:
-      $input.intVal()
-    of nnkStrLit, nnkIdent:
-      input.strVal()
-    else:
-      unrecognized "id = " & input[1].treeRepr
-      ""
 
   proc diveMap(input: NimNode): seq[NimNode] {.compileTime.} =
     result = @[]
@@ -302,6 +302,51 @@ macro genMap(statement: untyped): untyped =
 #	}},
 #	&(const capmix_mem_t){ .offset=-1 }
 #};
+
+macro genCMap(calls: untyped): untyped =
+  let mem_t  = "&(const capmix_mem_t)"
+  let area_t = "&(const capmix_mem_t *[])"
+  var source: seq[string] = @[]
+
+  proc parseOuter(list: NimNode) =
+    for c in list:
+      echo c.treeRepr
+      c.expectKind({nnkCall, nnkCommand})
+      var line = "\t" & mem_t & "{"
+      line &= ".offset = 0x" & c[0].intVal().toHex(8).toLower() & ", "
+      c[1].expectKind(nnkCommand)
+      line &= ".name = \"" & c[1][0].id_string() & "\", "
+      line &= ".kind = " & c[1][1].strVal() & ", "
+      line &= ".low = "  & $c[2].intVal() & ", "
+      line &= ".high = " & $c[3].intVal() & ", "
+      line &= "},"
+      source.add line
+
+  source.add "#include \"cmap.h\"\n"
+  calls.expectKind(nnkStmtList)
+  for call in calls:
+    call.expectKind(nnkCall)
+    let id = call[0].strVal()
+    source.add "static const capmix_mem_t *" & id & "[] = {"
+    call[1].parseOuter()
+    source.add "};"
+  "src/cmap.c".writeFile(source.join("\n"))
+
+
+genCMap:
+  scale:
+    0x00  "c"   TByte, 0, 127   # -64 .. +63
+    0x01  "c#"  TByte, 0, 127   # -64 .. +63
+    0x02  "d"   TByte, 0, 127   # -64 .. +63
+    0x03  "d#"  TByte, 0, 127   # -64 .. +63
+    0x04  "e"   TByte, 0, 127   # -64 .. +63
+    0x05  "f"   TByte, 0, 127   # -64 .. +63
+    0x06  "f#"  TByte, 0, 127   # -64 .. +63
+    0x07  "g"   TByte, 0, 127   # -64 .. +63
+    0x08  "g#"  TByte, 0, 127   # -64 .. +63
+    0x09  "a"   TByte, 0, 127   # -64 .. +63
+    0x0a  "a#"  TByte, 0, 127   # -64 .. +63
+    0x0b  "b"   TByte, 0, 127   # -64 .. +63
 
 
 ### map definitions

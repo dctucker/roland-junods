@@ -13,7 +13,7 @@ typedef struct capmix_memory_area_s {
 	const struct capmix_memory_area_s **const area; ///< areas of memory contained within this area
 } capmix_mem_t;
 
-static const capmix_mem_t const *my_area[] = {
+static const capmix_mem_t *my_area[] = {
 	&(const capmix_mem_t){.offset = 0, .name = "first", .area = (const capmix_mem_t*[]){
 		&(const capmix_mem_t){.offset=1, .name="second"},
 		&(const capmix_mem_t){ .offset=-1 }
@@ -21,9 +21,10 @@ static const capmix_mem_t const *my_area[] = {
 	&(const capmix_mem_t){ .offset=-1 }
 };
 
-int main(char **args, int argv)
+int main(int args, char **argv)
 {
 	const capmix_mem_t *area1 = my_area[0];
 	const capmix_mem_t *area2 = area1->area[0];
 	printf("%s %s %d\n", area1->name, area2->name, area1->area[1]->offset);
+	return 0;
 }
