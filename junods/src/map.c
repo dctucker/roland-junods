@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <inttypes.h>
 
+/*
 typedef enum {
 	None
 } capmix_type_t;
@@ -20,9 +21,13 @@ static const capmix_mem_t *my_area[] = {
 	}},
 	&(const capmix_mem_t){ .offset=-1 }
 };
+*/
+
+#include "cmap.c"
 
 int main(int args, char **argv)
 {
+	const capmix_mem_t **my_area = midi_n;
 	const capmix_mem_t *area1 = my_area[0];
 	const capmix_mem_t *area2 = area1->area[0];
 	printf("%s %s %d\n", area1->name, area2->name, area1->area[1]->offset);

@@ -1,7 +1,7 @@
 #include <inttypes.h>
 
 typedef enum {
-	TByte
+	TNone, TBool, TByte, TNibble, TNibblePair, TNibbleQuad, TEnum
 } capmix_type_t;
 typedef uint32_t capmix_addr_t; ///< 32-bit value holding a four-byte device address
 

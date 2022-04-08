@@ -1,4 +1,4 @@
-from strutils import toHex, toLower, join, splitWhitespace, contains
+from strutils import toHex, toLower, join, splitWhitespace, contains, repeat
 import macros
 
 import values
@@ -304,9 +304,16 @@ macro genMap(statement: untyped): untyped =
 #};
 
 macro genCMap(calls: untyped): untyped =
-  let mem_t  = "&(const capmix_mem_t)"
-  let area_t = "&(const capmix_mem_t *[])"
+  let mem_t   = "&(const capmix_mem_t)"
+  let area_t = "(const capmix_mem_t *[])"
   var source: seq[string] = @["#include \"cmap.h\"\n"]
+
+  proc parseOuter(list: NimNode, level: int = 1)
+
+  proc offset_spec[T: Ordinal](offset: T): string =
+    result = ".offset = 0x" & offset.toHex(8).toLower() & ", "
+  proc offset_spec(node: NimNode): string =
+    result = offset_spec node.intVal()
 
   proc kind_spec(kind: string, c: seq[NimNode]): string =
     result = ".kind = " & kind & ", "
@@ -316,39 +323,63 @@ macro genCMap(calls: untyped): untyped =
       result &= ".high = " & $c[1].intVal() & ", "
     of "TEnum":
       result &= ".values = " & $c[0].strVal() & ", "
+    of "TBool":
+      discard
     else:
-      unrecognized "getCMap kind = " & kind
+      result = ".area = " & kind & ", "
+      #unrecognized "getCMap kind = " & kind
+  proc kind_spec(node: NimNode, c: seq[NimNode]): string =
+    result = node.strVal().kind_spec(c)
 
   proc repeat_kind[T: Ordinal](kind_spec: string, times, span: T): string =
     for i in 0..<times:
       let name = $(i + 1)
-      result &= mem_t & "{ .name = \"" & name & "\", "
-      result &= kind_spec & " }, "
+      result &= "\t" & mem_t & "{ "
+      result &= offset_spec(i * span)
+      result &= ".name = \"" & name & "\", "
+      result &= kind_spec & " },\n"
 
-  proc parseOuter(list: NimNode) =
+  proc name_spec(node: NimNode): string =
+    result = ".name = \"" & node.id_string() & "\", "
+  
+  proc parseArea(id, list: NimNode, level: int): string =
+    var line = ""
+    line &= "\t".repeat(level) & mem_t & "{" & name_spec(id)
+    line &= ".area = " & area_t & "{"
+    source.add line
+    parseOuter(list, level+1)
+    line = "\t".repeat(level) & "}},"
+    result = line
+
+  proc parseMem(offset, name, kind: NimNode, params: seq[NimNode]): string =
+    result = mem_t & "{"
+    result &= offset_spec( offset )
+    result &= name_spec( name )
+    result &= kind_spec( kind, params )
+    result &= "},"
+
+  proc parseOuter(list: NimNode, level: int = 1) =
     list.expectKind nnkStmtList
     echo list.treeRepr
     for c in list:
-      c.expectKind({nnkCall, nnkCommand})
-      var line = "\t"
-      let first = c[0]
-      case first.kind
-      of nnkIntLit:
-        line &= mem_t & "{"
-        line &= ".offset = 0x" & c[0].intVal().toHex(8).toLower() & ", "
-        c[1].expectKind(nnkCommand)
-        let kind_str = c[1][1].strVal()
-        line &= ".name = \"" & c[1][0].id_string() & "\", "
-        line &= kind_spec(kind_str, c[2..^1])
-        line &= "},"
-      of nnkCall:
-        if first[0].kind == nnkIdent and first[0].strVal() == "repeat":
-          let times = first[1].intVal()
-          let span = first[2].intVal()
-          let kind = c[1].strVal()
-          line &= repeat_kind( kind_spec(kind, c[2..^1]), times, span )
+      var line = ""
+      case c.kind
+      of nnkCommand:
+        let first = c[0]
+        case first.kind
+        of nnkIntLit: # 0x00 name TKind
+          line &= "\t".repeat(level)
+          c[1].expectKind nnkCommand
+          line &= parseMem(c[0], c[1][0], c[1][1], c[2..^1])
+        of nnkCall: # repeat(n,m) TKind, param, param
+          if first[0].kind == nnkIdent and first[0].strVal() == "repeat":
+            line &= repeat_kind( kind_spec(c[1], c[2..^1]), first[1].intVal(), first[2].intVal() )
+        else:
+          unrecognized "getCMap first = " & first.treeRepr
+      of nnkCall: # section:
+        line &= parseArea(c[0], c[1], level)
       else:
-        unrecognized "getCMap first = " & first.treeRepr
+        unrecognized "getCMap c in list = " & c.treeRepr
 
       source.add line
 
