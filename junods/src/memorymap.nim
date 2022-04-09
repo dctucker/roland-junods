@@ -71,41 +71,6 @@ proc value*(kind: Kind, b: seq[byte]): int =
   else:
     result = b[0].int
 
-type
-  MemObj* = object # tree structure for describing areas of device memory
-    offset*: JAddr
-    case kind*: Kind
-    of TEnum:
-      values*: EnumList
-    of TByte, TNibble, TNibblePair, TNibbleQuad:
-      low*, high*: int
-    else:
-      discard
-    name*:   string
-    area*:  seq[Mem]
-  Mem* = ref MemObj
-  MemArea* = seq[Mem]
-
-proc `$`*(mem: Mem): string =
-  result &= $mem.offset
-  if mem.offset != NOFF:
-    result &= " "
-  result &= mem.name
-  if mem.kind != TNone:
-    result &= "\t" & $mem.kind
-    case mem.kind
-    of TByte, TNibble, TNibblePair, TNibbleQuad:
-      result &= ", " & $mem.low & ", " & $mem.high
-    of TEnum:
-      result &= ", " & $mem.values
-    else:
-      discard
-  else:
-    result &= ":"
-
-proc value*(mem: Mem, b: seq[byte]): int =
-  result = mem.kind.value(b)
-
 
 
 ### macros section
@@ -287,7 +252,7 @@ macro genCMap(calls: untyped): untyped =
     source.add "\tENDA"
     source.add "};"
   source.add """
-    const capmix_mem_t **top_area = juno;
+    const capmix_mem_t **top_area = juno_map;
   """
   "src/cmap.c".writeFile(source.join("\n"))
 
@@ -997,28 +962,74 @@ genCMap:
       0x30000000    patch:                performance_patches
       0x40000000    drum_kit:             repeat(8, 0x100000) drum_kit
       0x60000000    vocal_effect:         vocal_effects
+  juno_map:
+    0 juno: juno
 
 {.compile: "cmap.c".}
-let juno_map* = Mem(area: @[])
 
 type
-  AddrT   {.importc: "capmix_addr_t", header: "cmap.h".} = uint32
+  AddrT   {.importc: "capmix_addr_t", header: "cmap.h".} = JAddr
   Adapter {.importc: "capmix_mem_t", header: "cmap.h".} = object
     offset*: AddrT
-    name*: cstring
-    kind*: cint
+    name: cstring
+    kind*: Kind
     low*, high*: cint
     values*: cstringArray
     area*: ptr UncheckedArray[ptr Adapter]
   AdapterArray* = ptr UncheckedArray[ptr Adapter]
+  Mem* = ptr Adapter
+  MemArea* = AdapterArray
 
 let ENDA = 0xffffffff.AddrT
 
 iterator items*(area: AdapterArray): ptr Adapter =
-  var n = 0
-  while area[n][].offset != ENDA:
-    yield area[n]
-    inc n
+  if area.ptr != nil:
+    var n = 0
+    while area[n][].offset != ENDA:
+      yield area[n]
+      inc n
 
-proc `$`*(a: AddrT): string =
-  "0x" & a.int.toHex(8)
+let top_area* {.importc.}: AdapterArray
+let juno_map* = top_area[0]
+
+#type
+#  MemObj* = object # tree structure for describing areas of device memory
+#    offset*: JAddr
+#    case kind*: Kind
+#    of TEnum:
+#      values*: EnumList
+#    of TByte, TNibble, TNibblePair, TNibbleQuad:
+#      low*, high*: int
+#    else:
+#      discard
+#    name*:   string
+#    area*:  seq[Mem]
+#  Mem* = ref MemObj
+#  MemArea* = seq[Mem]
+
+proc `$`*(mem: Mem): string =
+  result &= $mem.offset
+  if mem.offset != NOFF:
+    result &= " "
+  result &= mem.name
+  if mem.kind != TNone:
+    result &= "\t" & $mem.kind
+    case mem.kind
+    of TByte, TNibble, TNibblePair, TNibbleQuad:
+      result &= ", " & $mem.low & ", " & $mem.high
+    of TEnum:
+      discard
+      #result &= ", " & $mem.values
+    else:
+      discard
+  else:
+    result &= ":"
+
+proc value*(mem: Mem, b: seq[byte]): int =
+  result = mem.kind.value(b)
+
+proc len*(area: MemArea): int =
+  for mem in area:
+    result += 1
+
+proc name*(mem: Mem): string = $mem.name

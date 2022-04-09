@@ -1558,5 +1558,9 @@ static const capmix_mem_t *juno[] = {
 	}},
 	ENDA
 };
-    const capmix_mem_t **top_area = juno;
+static const capmix_mem_t *juno_map[] = {
+	&(const capmix_mem_t){ .offset = 0x00000000, .name = "juno", .area = juno, },
+	ENDA
+};
+    const capmix_mem_t **top_area = juno_map;
   

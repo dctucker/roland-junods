@@ -26,18 +26,18 @@ proc traverse(mem: Mem, offset: JAddr, path: seq[string]) =
 
 proc visit(mem: Mem, level: int = 0) =
   echo indent($mem, level*4)
-  for area in mem.area:
-    visit area, level + 1
-
-when isMainModule:
-  let top_area* {.importc.}: AdapterArray
-  #let mem = top_area[0]
-  for mem in top_area:
-    echo mem.offset, " ", mem.name
-  #echo mem.area.repr
+  for m in mem.area:
+    visit m, level + 1
 
 #when isMainModule:
-#  visit juno_map
+#  let top_area* {.importc.}: AdapterArray
+#  #let mem = top_area[0]
+#  for mem in top_area:
+#    echo mem.offset, " ", mem.name
+#  #echo mem.area.repr
+
+when isMainModule:
+  visit juno_map
 
 #when isMainModule:
 #  initCache()

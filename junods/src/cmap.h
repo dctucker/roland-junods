@@ -1,9 +1,18 @@
 #include <inttypes.h>
 
 typedef enum {
-	TNone, TBool, TByte, TNibble, TNibblePair, TNibbleQuad, TEnum, TName, TName16
+    TNone,
+    TBool,
+    TNibble,
+    TEnum,
+    TByte,
+    TNibblePair,
+    TNibbleQuad,
+    TName,
+    TName16
 } capmix_type_t;
-typedef uint32_t capmix_addr_t; ///< 32-bit value holding a four-byte device address
+typedef uint64_t capmix_addr_t; ///< 32-bit value holding a four-byte device address
+
 
 typedef struct capmix_memory_area_s {
 	capmix_addr_t offset;   ///< device memory address offset of current area

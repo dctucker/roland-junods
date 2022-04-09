@@ -27,14 +27,14 @@ proc get_kind(nt: JunoNteract): Kind =
   return nt.areas[^1][nt.selected].kind
 
 proc get_offset(nt: JunoNteract): JAddr =
-  var area = nt.areas[0][nt.coords[0]]
+  var mem = nt.areas[0][nt.coords[0]]
   for i in nt.coords[1..^1]:
-    if area.offset != NOFF:
-      result += area.offset
-    if area.area.len() > 0:
-      area = area.area[i]
-  if area.offset != NOFF:
-    result += area.offset
+    if mem.offset != NOFF:
+      result += mem.offset
+    if mem.area.len() > 0:
+      mem = mem.area[i]
+  if mem.offset != NOFF:
+    result += mem.offset
 
 method set_cmdline(nt: JunoNteract) =
   let mem = nt.areas[^1][nt.selected]
@@ -51,7 +51,7 @@ method set_cmdline(nt: JunoNteract) =
   of TEnum:
     let value = cache_get(nt.get_offset(), nt.get_kind())[0]
     nt.pos = nt.cmdline.len()
-    nt.cmdline &= " = " & $mem.kind & "(" & mem.values[value] & ")"
+    nt.cmdline &= " = " & $mem.kind & "(" & $mem.values[value] & ")"
   of TName, TName16:
     let value = cache_get(nt.get_offset(), nt.get_kind())
     nt.pos = nt.cmdline.len()
