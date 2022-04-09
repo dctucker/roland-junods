@@ -345,10 +345,20 @@ macro genCMap(calls: untyped): untyped =
   proc parseArea(id, list: NimNode, level: int): string =
     var line = ""
     line &= "\t".repeat(level) & mem_t & "{" & name_spec(id)
-    line &= ".area = " & area_t & "{"
-    source.add line
-    parseOuter(list, level+1)
-    line = "\t".repeat(level) & "}},"
+    line &= ".area = "
+    case list.kind
+    of nnkIdent:
+      line &= list.strVal()
+      line &= "},"
+    of nnkStmtList:
+      line &= area_t & "{"
+      source.add line
+      parseOuter(list, level+1)
+      source.add "\t".repeat(level) & "},"
+      line = "\t".repeat(level) & "},"
+    else:
+      unrecognized "parseArea = " & list.treeRepr
+
     result = line
 
   proc parseMem(offset, name, kind: NimNode, params: seq[NimNode]): string =
@@ -367,10 +377,20 @@ macro genCMap(calls: untyped): untyped =
       of nnkCommand:
         let first = c[0]
         case first.kind
-        of nnkIntLit: # 0x00 name TKind
-          line &= "\t".repeat(level)
-          c[1].expectKind nnkCommand
-          line &= parseMem(c[0], c[1][0], c[1][1], c[2..^1])
+        of nnkIntLit: 
+          case c[1].kind
+          of nnkCommand: # 0x00 name TKind
+            line &= "\t".repeat(level)
+            c[1].expectKind nnkCommand
+            line &= parseMem(c[0], c[1][0], c[1][1], c[2..^1])
+          of nnkIdent: # 0x00 name: other
+            line &= "\t".repeat(level)
+            line &= mem_t & "{ "
+            #line &= parseArea(c[0], c[1], level)
+            line &= name_spec(c[0])
+            line &= ".area = " & c[1].strVal() & " },"
+          else:
+            unrecognized "parseOuter after offset = " & c[1].treeRepr
         of nnkCall: # repeat(n,m) TKind, param, param
           if first[0].kind == nnkIdent and first[0].strVal() == "repeat":
             line &= repeat_kind( kind_spec(c[1], c[2..^1]), first[1].intVal(), first[2].intVal() )
@@ -394,7 +414,10 @@ macro genCMap(calls: untyped): untyped =
 
 
 genCMap:
-  scale:
+  voice_reserves: repeat(16, 1) TByte, 0, 64
+  parameters_20: repeat(20, 4) TNibbleQuad, 12768, 52768
+  parameters_32: repeat(32, 4) TNibbleQuad, 12768, 52768
+  scale_map:
     0x00  "c"   TByte, 0, 127   # -64 .. +63
     0x01  "c#"  TByte, 0, 127   # -64 .. +63
     0x02  "d"   TByte, 0, 127   # -64 .. +63
@@ -407,10 +430,6 @@ genCMap:
     0x09  "a"   TByte, 0, 127   # -64 .. +63
     0x0a  "a#"  TByte, 0, 127   # -64 .. +63
     0x0b  "b"   TByte, 0, 127   # -64 .. +63
-  voice_reserves:
-    repeat(16, 1) TByte, 0, 64
-  parameters_20:
-    repeat(20, 4) TNibbleQuad, 12768, 52768
 
   midi_n:
     rx:
@@ -429,32 +448,18 @@ genCMap:
   midis:
     repeat(16, 0x100) midi_n
 
+  controls:
+    0 source    TEnum, mfx_control_source_values
+    1 sens      TByte, 1, 127
+  assigns: repeat(4,1) TByte, 0, 16
+  assign:
+    8 assign: assigns
+  #repeat(4,2) controls & assign
+
+
 ### map definitions
 
-let voice_reserves = Mem(kind: TByte      , low:     0, high:    64).repeat(16, 1)
-let parameters_20  = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(20, 4)
-let parameters_32  = Mem(kind: TNibbleQuad, low: 12768, high: 52768).repeat(32, 4)
 
-let scale_map = genMap:
-  0x00  "c"   TByte, 0, 127   # -64 .. +63
-  0x01  "c#"  TByte, 0, 127   # -64 .. +63
-  0x02  "d"   TByte, 0, 127   # -64 .. +63
-  0x03  "d#"  TByte, 0, 127   # -64 .. +63
-  0x04  "e"   TByte, 0, 127   # -64 .. +63
-  0x05  "f"   TByte, 0, 127   # -64 .. +63
-  0x06  "f#"  TByte, 0, 127   # -64 .. +63
-  0x07  "g"   TByte, 0, 127   # -64 .. +63
-  0x08  "g#"  TByte, 0, 127   # -64 .. +63
-  0x09  "a"   TByte, 0, 127   # -64 .. +63
-  0x0a  "a#"  TByte, 0, 127   # -64 .. +63
-  0x0b  "b"   TByte, 0, 127   # -64 .. +63
-
-let controls = genMap:
-  0 source    TEnum, mfx_control_source_values
-  1 sens      TByte, 1, 127
-let assigns = Mem(kind: TByte, low: 0, high: 16).repeat(4,1)
-let assign = genMap:
-  8 assign: assigns
 let control = controls.repeat(4,2) & assign
 
 let mfx = genMap:
