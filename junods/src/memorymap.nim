@@ -307,8 +307,11 @@ macro genCMap(calls: untyped): untyped =
   let mem_t   = "&(const capmix_mem_t)"
   let area_t = "(const capmix_mem_t *[])"
   var source: seq[string] = @["#include \"cmap.h\"\n"]
+  var level = 0
 
-  proc parseOuter(list: NimNode, level: int = 1)
+  proc parseOuter(list: NimNode)
+
+  proc tabs(): string = "\t".repeat(level)
 
   proc offset_spec[T: Ordinal](offset: T): string =
     result = ".offset = 0x" & offset.toHex(8).toLower() & ", "
@@ -331,20 +334,33 @@ macro genCMap(calls: untyped): untyped =
   proc kind_spec(node: NimNode, c: seq[NimNode]): string =
     result = node.strVal().kind_spec(c)
 
+  proc area_spec(id: NimNode): string =
+    result = ".area = " & id.strVal() & ", "
+
   proc repeat_kind[T: Ordinal](kind_spec: string, times, span: T): string =
     for i in 0..<times:
       let name = $(i + 1)
-      result &= "\t" & mem_t & "{ "
+      result &= tabs() & mem_t & "{ "
       result &= offset_spec(i * span)
       result &= ".name = \"" & name & "\", "
-      result &= kind_spec & " },\n"
+      result &= kind_spec & "},\n"
+    result = result[0..^2]
+
+  proc repeat_area[T: Ordinal](id: NimNode, times, span: T): string =
+    for i in 0..<times:
+      let name = $(i + 1)
+      result &= tabs() & mem_t & "{ "
+      result &= offset_spec(i * span)
+      result &= ".name = \"" & name & "\", "
+      result &= area_spec(id) & "},\n"
+    result = result[0..^2]
 
   proc name_spec(node: NimNode): string =
     result = ".name = \"" & node.id_string() & "\", "
-  
-  proc parseArea(id, list: NimNode, level: int): string =
+
+  proc parseArea(id, list: NimNode): string =
     var line = ""
-    line &= "\t".repeat(level) & mem_t & "{" & name_spec(id)
+    line &= tabs() & mem_t & "{ " & name_spec(id)
     line &= ".area = "
     case list.kind
     of nnkIdent:
@@ -353,57 +369,73 @@ macro genCMap(calls: untyped): untyped =
     of nnkStmtList:
       line &= area_t & "{"
       source.add line
-      parseOuter(list, level+1)
-      source.add "\t".repeat(level) & "},"
-      line = "\t".repeat(level) & "},"
+      parseOuter(list)
+      line = "}},"
     else:
       unrecognized "parseArea = " & list.treeRepr
 
     result = line
 
-  proc parseMem(offset, name, kind: NimNode, params: seq[NimNode]): string =
-    result = mem_t & "{"
+  proc parseMem(offset, name, kind: NimNode, params: seq[NimNode] = @[]): string =
+    result = tabs() & mem_t & "{ "
     result &= offset_spec( offset )
     result &= name_spec( name )
-    result &= kind_spec( kind, params )
+    case kind.kind
+    of nnkIdent:
+      result &= kind_spec( kind, params )
+    of nnkStmtList:
+      source.add result & ".area = " & area_t & "{ // parseMem"
+      parseOuter(kind)
+      result = tabs() & "}"
+    else:
+      unrecognized "parseMem kind = " & kind.treeRepr
     result &= "},"
 
-  proc parseOuter(list: NimNode, level: int = 1) =
+  proc parseOuter(list: NimNode) =
+    inc level
     list.expectKind nnkStmtList
-    echo list.treeRepr
     for c in list:
       var line = ""
       case c.kind
       of nnkCommand:
         let first = c[0]
         case first.kind
-        of nnkIntLit: 
+        of nnkIntLit:               # 0x00
           case c[1].kind
-          of nnkCommand: # 0x00 name TKind
-            line &= "\t".repeat(level)
+          of nnkCommand:            # 0x00 name TKind
             c[1].expectKind nnkCommand
             line &= parseMem(c[0], c[1][0], c[1][1], c[2..^1])
-          of nnkIdent: # 0x00 name: other
-            line &= "\t".repeat(level)
-            line &= mem_t & "{ "
-            #line &= parseArea(c[0], c[1], level)
-            line &= name_spec(c[0])
-            line &= ".area = " & c[1].strVal() & " },"
+          of nnkIdent:              # 0x00 name: other
+            line &= parseMem(c[0], c[1], c[2])
+            #line &= tabs()
+            #line &= mem_t & "{ "
+            #line &= offset_spec(c[0])
+            #line &= name_spec(c[1])
+            #c[2].expectKind nnkIdent
+            #line &= area_spec(c[2])
+            #line &= "},"
           else:
             unrecognized "parseOuter after offset = " & c[1].treeRepr
-        of nnkCall: # repeat(n,m) TKind, param, param
+        of nnkCall:                 # repeat(n,m) TKind, param, param
           if first[0].kind == nnkIdent and first[0].strVal() == "repeat":
             line &= repeat_kind( kind_spec(c[1], c[2..^1]), first[1].intVal(), first[2].intVal() )
         else:
           unrecognized "getCMap first = " & first.treeRepr
       of nnkCall: # section:
-        line &= parseArea(c[0], c[1], level)
+        #if c[0].kind == nnkIdent and c[0].strVal() == "repeat":
+        #  # repeat(n,m) name
+        #  echo " repeat? " & c.treeRepr
+        #  #line &= repeat_area(c[3], c[1].intVal(), c[2].intVal())
+        #else:
+        line &= tabs()
+        line &= parseArea(c[0], c[1])
       else:
         unrecognized "getCMap c in list = " & c.treeRepr
 
       source.add line
+    dec level
 
-  calls.expectKind(nnkStmtList)
+  calls.expectKind nnkStmtList
   for call in calls:
     call.expectKind(nnkCall)
     let id = call[0].strVal()
@@ -451,16 +483,16 @@ genCMap:
   controls:
     0 source    TEnum, mfx_control_source_values
     1 sens      TByte, 1, 127
-  assigns: repeat(4,1) TByte, 0, 16
-  assign:
-    8 assign: assigns
-  #repeat(4,2) controls & assign
+  control:
+    repeat(4,2) controls
+    8 assign:
+      repeat(4,1) TByte, 0, 16
 
 
 ### map definitions
 
 
-let control = controls.repeat(4,2) & assign
+#let control = controls.repeat(4,2) & assign
 
 let mfx = genMap:
   0x00 type               TByte, 0, 80
