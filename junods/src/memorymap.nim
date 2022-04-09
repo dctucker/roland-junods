@@ -982,12 +982,16 @@ type
 
 let ENDA = 0xffffffff.AddrT
 
-iterator items*(area: AdapterArray): ptr Adapter =
+iterator items*(area: MemArea): Mem =
   if area.ptr != nil:
     var n = 0
     while area[n][].offset != ENDA:
       yield area[n]
       inc n
+
+iterator items*(mem: Mem): Mem =
+  for m in mem.area:
+    yield m
 
 let top_area* {.importc.}: AdapterArray
 let juno_map* = top_area[0]

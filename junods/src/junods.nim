@@ -21,12 +21,12 @@ proc traverse(mem: Mem, offset: JAddr, path: seq[string]) =
   if not hidden:
     stdout.write desc
     stdout.write "\n"
-  for area in mem.area:
-    traverse(area, a, path & mem.name)
+  for m in mem:
+    traverse(m, a, path & mem.name)
 
 proc visit(mem: Mem, level: int = 0) =
   echo indent($mem, level*4)
-  for m in mem.area:
+  for m in mem:
     visit m, level + 1
 
 #when isMainModule:
