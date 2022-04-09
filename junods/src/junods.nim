@@ -3,7 +3,7 @@ import junonteract
 import cache
 
 import memorymap
-from strutils import join, indent
+from strutils import join, indent, toHex
 
 proc traverse(mem: Mem, offset: JAddr, path: seq[string]) =
   let level = path.len
@@ -29,16 +29,23 @@ proc visit(mem: Mem, level: int = 0) =
   for area in mem.area:
     visit area, level + 1
 
+when isMainModule:
+  let top_area* {.importc.}: AdapterArray
+  #let mem = top_area[0]
+  for mem in top_area:
+    echo mem.offset, " ", mem.name
+  #echo mem.area.repr
+
 #when isMainModule:
 #  visit juno_map
 
-when isMainModule:
-  initCache()
-  #visit juno_map
-  let nt = newJunoNteract()
-  let input = nt.getUserInput()
-  echo input
-  ##for area in nt.areas[^1]:
-  ##  echo area.name
-  #traverse(juno_map, 0.JAddr, @[])
+#when isMainModule:
+#  initCache()
+#  #visit juno_map
+#  let nt = newJunoNteract()
+#  let input = nt.getUserInput()
+#  echo input
+#  ##for area in nt.areas[^1]:
+#  ##  echo area.name
+#  #traverse(juno_map, 0.JAddr, @[])
 

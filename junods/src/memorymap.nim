@@ -86,11 +86,6 @@ type
   Mem* = ref MemObj
   MemArea* = seq[Mem]
 
-#proc format(mem: Mem, level: int): string =
-#  if level > 1: return ""
-#  for m in mem.area:
-#    result &= indent( m.format(level), level*4 )
-
 proc `$`*(mem: Mem): string =
   result &= $mem.offset
   if mem.offset != NOFF:
@@ -115,42 +110,6 @@ proc value*(mem: Mem, b: seq[byte]): int =
 
 ### macros section
 
-macro repeat(thing: seq[MemObj], n, span: static[int]): seq[MemObj] =
-  result = quote do: @[]
-  for i in 0..<n:
-    let name = newStrLitNode $(i + 1)
-    let offset = newIntLitNode(span * i)
-    let offset_node = quote do: `offset`.JAddr
-    result[^1].add quote do:
-      MemObj( offset: `offset`.JAddr, name: `name`, area: `thing`)
-
-macro repeat(thing: MemArea, n, span: static[int]): seq[Mem] =
-  result = quote do: @[]
-  for i in 0..<n:
-    let name = newStrLitNode $(i + 1)
-    let offset = newIntLitNode(span * i)
-    let offset_node = quote do: `offset`.JAddr
-    result[^1].add quote do:
-      Mem( offset: `offset`.JAddr, name: `name`, area: `thing`)
-
-macro repeat(thing: Mem, n, span: static[int]): seq[Mem] =
-  result = quote do: @[]
-
-  for i in 0..<n:
-    let node = thing.copy()
-    let offset = newIntLitNode(span * i)
-    let offset_node = quote do: `offset`.JAddr
-    node.add newColonExpr( ident("name"), newStrLitNode($(i + 1)) )
-    node.add newColonExpr( ident("offset"), offset_node )
-    result[^1].add node
-
-macro repeat(kind: Kind, n, span: static[int]): seq[Mem] =
-  result = quote do: @[]
-  for i in 0..<n:
-    let name = newStrLitNode $(i + 1)
-    let offset = newIntLitNode(span * i)
-    result.add quote do: Mem( offset: `offset`.JAddr, name: `name`, kind: `kind`)
-
 proc unrecognized(args: varargs[string]) {.compileTime.} =
   echo "unrecognized: ", args.join(" ")
 
@@ -164,145 +123,6 @@ proc id_string(input: NimNode): string {.compileTime.} =
     unrecognized "id = " & input[1].treeRepr
     ""
 
-#macro genMap(statement: untyped): untyped =
-#
-#  proc diveMap(input: NimNode): seq[NimNode] {.compileTime.} =
-#    result = @[]
-#    let class = ident("MemObj")
-#    #echo input.kind
-#    case input.kind
-#    of nnkStmtList:
-#      if input.len() == 1 and input[0].kind == nnkStmtList:
-#        result.add input[0]
-#      else:
-#        for stmt in input:
-#          for s in diveMap(stmt):
-#            result.add s
-#    of nnkCommand:
-#      var offset: BiggestInt = -1
-#      if input[0].kind == nnkIntLit:
-#        offset = input[0].intVal()
-#      let name = case input[1].kind
-#      of nnkIntLit:
-#        $input[1].intVal()
-#      of nnkStrLit, nnkIdent:
-#        input[1].strVal()
-#      of nnkCommand:
-#        case input[1][0].kind
-#        of nnkIntLit:
-#          $input[1][0].intVal()
-#        of nnkStrLit, nnkIdent:
-#          input[1][0].strVal()
-#        else:
-#          unrecognized "id = " & input[1].treeRepr
-#          ""
-#      else:
-#        unrecognized "id = " & input[1].treeRepr
-#        ""
-#
-#      if input[1].kind == nnkCommand:
-#        let kind_str = input[1][1].strVal()
-#        let kind = kind_str.ident
-#        case kind_str
-#        of "TNibbleQuad","TNibblePair","TNibble","TByte":
-#          input.expectLen(4)
-#          let low  = input[2]
-#          let high = input[3]
-#          result.add quote do:
-#            `class`( offset: JAddr(`offset`), name: `name`, kind: `kind`, low: `low`, high: `high` )
-#        of "TEnum":
-#          case input[2].kind
-#          of nnkPrefix, nnkCall, nnkIdent:
-#            let values = input[2]
-#            if values.kind == nnkIdent:
-#              result.add quote do:
-#                `class`( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: `values` )
-#            else:
-#              result.add quote do:
-#                `class`( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: EnumList(strings: `values`) )
-#          of nnkStrLit, nnkTripleStrLit:
-#            let values = quote do:
-#              @[]
-#            for word in input[2].strVal().splitWhitespace():
-#              values[^1].add quote do:
-#                `word`.cstring
-#            result.add quote do:
-#              `class`( offset: JAddr(`offset`), name: `name`, kind: `kind`, values: EnumList(strings: `values`) )
-#          else:
-#            unrecognized "TEnum values = " & input[2].treeRepr
-#        of "TBool", "TName", "TName16":
-#          result.add quote do:
-#            `class`( offset: JAddr(`offset`), name: `name`, kind: `kind` )
-#        else:
-#          unrecognized "mem = " & kind.treeRepr
-#
-#      elif input.len() >= 3:
-#        for area in diveMap(input[2]):
-#          #echo "area = " , area.treeRepr
-#          case area.kind
-#          of nnkBracket:
-#            result.add quote do:
-#              `class`( offset: JAddr(`offset`), name: `name`, area: @`area`)
-#          of nnkIdent, nnkPrefix:
-#            result.add quote do:
-#              `class`( offset: JAddr(`offset`), name: `name`, area: `area`)
-#          of nnkObjConstr:
-#            result.add quote do:
-#              `class`( offset: JAddr(`offset`), name: `name`, area: @[`area`])
-#          else:
-#            echo "unexpected kind = " & area.treeRepr
-#      else:
-#        if not name.contains("reserved"):
-#          result.add quote do:
-#            `class`( offset: JAddr(`offset`), name: `name`)
-#      #echo "name = " & name.repr
-#    of nnkCall:
-#      let name = newLit input[0].id_string()
-#      result.add quote do:
-#        `class`( offset: NOFF, name: `name`, area: @[])
-#      input[0].expectKind {nnkIdent, nnkStrLit, nnkIntLit}
-#      for stmtlist in diveMap(input[1]):
-#        case stmtlist.kind
-#        of nnkBracket:
-#          for stmt in stmtlist:
-#            result[^1][^1][^1][^1].add(stmt)
-#        of nnkIdent:
-#          result[^1][^1][^1] = stmtlist
-#        of nnkObjConstr:
-#          result[^1][^1][^1][^1].add(stmtlist)
-#        else:
-#          echo "stmtlist kind = " & $stmtlist.kind
-#          result[^1][^1][^1][^1].add(stmtlist)
-#    of nnkIdent:
-#      result.add input
-#    else:
-#      result.add quote do:
-#        `input`
-#
-#  #echo "input ast = " & statement.treeRepr
-#  var bracket = quote do:
-#    []
-#  for sub in statement:
-#    for dive in diveMap(sub):
-#      if dive.kind == nnkBracket:
-#        for d in dive:
-#          bracket.add d
-#      else:
-#        bracket.add dive
-#  result = quote do:
-#    @`bracket`
-#  #echo "output ast = " & result.treeRepr
-#  #echo result.repr
-
-
-## make a macro generate this:
-#static const capmix_mem_t const *my_area[] = {
-#	&(const capmix_mem_t){.offset = 0, .name = "first", .area = (const capmix_mem_t*[]){
-#		&(const capmix_mem_t){.offset=1, .name="second"},
-#		&(const capmix_mem_t){ .offset=-1 }
-#	}},
-#	&(const capmix_mem_t){ .offset=-1 }
-#};
 
 macro genCMap(calls: untyped): untyped =
   let mem_t   = "&(const capmix_mem_t)"
@@ -396,6 +216,7 @@ macro genCMap(calls: untyped): untyped =
       line &= area_t & "{"
       source.add line
       parseOuter(list)
+      source.add tabs() & "\tENDA"
       line = "}},"
     else:
       unrecognized "parseArea = " & list.treeRepr
@@ -415,6 +236,7 @@ macro genCMap(calls: untyped): untyped =
       else:
         source.add result & ".area = " & area_t & "{ // parseMem"
         parseOuter(kind)
+        source.add tabs() & "\tENDA"
         result = tabs() & "}"
     else:
       unrecognized "parseMem kind = " & kind.treeRepr
@@ -462,7 +284,11 @@ macro genCMap(calls: untyped): untyped =
     let id = call[0].strVal()
     source.add "static const capmix_mem_t *" & id & "[] = {"
     call[1].parseOuter()
+    source.add "\tENDA"
     source.add "};"
+  source.add """
+    const capmix_mem_t **top_area = juno;
+  """
   "src/cmap.c".writeFile(source.join("\n"))
 
 
@@ -1173,9 +999,26 @@ genCMap:
       0x60000000    vocal_effect:         vocal_effects
 
 {.compile: "cmap.c".}
-{.emit: """
-const capmix_mem_t *top_area = juno;
-""".}
-let top_area {.importc, nodecl.}: pointer
-#let juno_map* = Mem(area: top_area)
+let juno_map* = Mem(area: @[])
 
+type
+  AddrT   {.importc: "capmix_addr_t", header: "cmap.h".} = uint32
+  Adapter {.importc: "capmix_mem_t", header: "cmap.h".} = object
+    offset*: AddrT
+    name*: cstring
+    kind*: cint
+    low*, high*: cint
+    values*: cstringArray
+    area*: ptr UncheckedArray[ptr Adapter]
+  AdapterArray* = ptr UncheckedArray[ptr Adapter]
+
+let ENDA = 0xffffffff.AddrT
+
+iterator items*(area: AdapterArray): ptr Adapter =
+  var n = 0
+  while area[n][].offset != ENDA:
+    yield area[n]
+    inc n
+
+proc `$`*(a: AddrT): string =
+  "0x" & a.int.toHex(8)

@@ -18,6 +18,7 @@ static const capmix_mem_t *voice_reserves[] = {
 	&(const capmix_mem_t){ .offset = 0x0000000d, .name = "14", .kind = TByte, .low = 0, .high = 64, },
 	&(const capmix_mem_t){ .offset = 0x0000000e, .name = "15", .kind = TByte, .low = 0, .high = 64, },
 	&(const capmix_mem_t){ .offset = 0x0000000f, .name = "16", .kind = TByte, .low = 0, .high = 64, },
+	ENDA
 };
 static const capmix_mem_t *parameters_20[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "1", .kind = TNibbleQuad, .low = 12768, .high = 52768, },
@@ -40,6 +41,7 @@ static const capmix_mem_t *parameters_20[] = {
 	&(const capmix_mem_t){ .offset = 0x00000044, .name = "18", .kind = TNibbleQuad, .low = 12768, .high = 52768, },
 	&(const capmix_mem_t){ .offset = 0x00000048, .name = "19", .kind = TNibbleQuad, .low = 12768, .high = 52768, },
 	&(const capmix_mem_t){ .offset = 0x0000004c, .name = "20", .kind = TNibbleQuad, .low = 12768, .high = 52768, },
+	ENDA
 };
 static const capmix_mem_t *parameters_32[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "1", .kind = TNibbleQuad, .low = 12768, .high = 52768, },
@@ -74,6 +76,7 @@ static const capmix_mem_t *parameters_32[] = {
 	&(const capmix_mem_t){ .offset = 0x00000074, .name = "30", .kind = TNibbleQuad, .low = 12768, .high = 52768, },
 	&(const capmix_mem_t){ .offset = 0x00000078, .name = "31", .kind = TNibbleQuad, .low = 12768, .high = 52768, },
 	&(const capmix_mem_t){ .offset = 0x0000007c, .name = "32", .kind = TNibbleQuad, .low = 12768, .high = 52768, },
+	ENDA
 };
 static const capmix_mem_t *scale_map[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "c", .kind = TByte, .low = 0, .high = 127, },
@@ -88,10 +91,12 @@ static const capmix_mem_t *scale_map[] = {
 	&(const capmix_mem_t){ .offset = 0x00000009, .name = "a", .kind = TByte, .low = 0, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x0000000a, .name = "a#", .kind = TByte, .low = 0, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x0000000b, .name = "b", .kind = TByte, .low = 0, .high = 127, },
+	ENDA
 };
 static const capmix_mem_t *controls[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "source", .kind = TEnum, .values = mfx_control_source_values, },
 	&(const capmix_mem_t){ .offset = 0x00000001, .name = "sens", .kind = TByte, .low = 1, .high = 127, },
+	ENDA
 };
 static const capmix_mem_t *control[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "1", .area = controls, },
@@ -103,7 +108,9 @@ static const capmix_mem_t *control[] = {
 		&(const capmix_mem_t){ .offset = 0x00000001, .name = "2", .kind = TByte, .low = 0, .high = 16, },
 		&(const capmix_mem_t){ .offset = 0x00000002, .name = "3", .kind = TByte, .low = 0, .high = 16, },
 		&(const capmix_mem_t){ .offset = 0x00000003, .name = "4", .kind = TByte, .low = 0, .high = 16, },
+		ENDA
 	}},
+	ENDA
 };
 static const capmix_mem_t *mfx[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "type", .kind = TByte, .low = 0, .high = 80, },
@@ -113,6 +120,7 @@ static const capmix_mem_t *mfx[] = {
 	&(const capmix_mem_t){ .offset = 0x00000004, .name = "output_asssign", .kind = TEnum, .values = fx_output_assign_values, },
 	&(const capmix_mem_t){ .offset = 0x00000005, .name = "control", .area = control, },
 	&(const capmix_mem_t){ .offset = 0x00000011, .name = "parameter", .area = parameters_32, },
+	ENDA
 };
 static const capmix_mem_t *chorus[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "type", .kind = TByte, .low = 0, .high = 3, },
@@ -120,12 +128,14 @@ static const capmix_mem_t *chorus[] = {
 	&(const capmix_mem_t){ .offset = 0x00000002, .name = "output_assign", .kind = TEnum, .values = fx_output_assign_values, },
 	&(const capmix_mem_t){ .offset = 0x00000003, .name = "output_select", .kind = TEnum, .values = (const char *[]){"MAIN","REV","MAIN+REV"}, },
 	&(const capmix_mem_t){ .offset = 0x00000004, .name = "parameter", .area = parameters_20, },
+	ENDA
 };
 static const capmix_mem_t *reverb[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "type", .kind = TByte, .low = 0, .high = 5, },
 	&(const capmix_mem_t){ .offset = 0x00000001, .name = "level", .kind = TByte, .low = 0, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x00000002, .name = "output_assign", .kind = TEnum, .values = fx_output_assign_values, },
 	&(const capmix_mem_t){ .offset = 0x00000003, .name = "parameter", .area = parameters_20, },
+	ENDA
 };
 static const capmix_mem_t *midi_n[] = {
 	&(const capmix_mem_t){ .name = "rx", .area = (const capmix_mem_t *[]){
@@ -139,9 +149,11 @@ static const capmix_mem_t *midi_n[] = {
 		&(const capmix_mem_t){ .offset = 0x00000007, .name = "pan", .kind = TBool, },
 		&(const capmix_mem_t){ .offset = 0x00000008, .name = "expression", .kind = TBool, },
 		&(const capmix_mem_t){ .offset = 0x00000009, .name = "hold_1", .kind = TBool, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .offset = 0x0000000a, .name = "phase_lock", .kind = TBool, },
 	&(const capmix_mem_t){ .offset = 0x0000000b, .name = "velocity_curve_type", .kind = TByte, .low = 0, .high = 4, },
+	ENDA
 };
 static const capmix_mem_t *midis[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "1", .area = midi_n, },
@@ -160,6 +172,7 @@ static const capmix_mem_t *midis[] = {
 	&(const capmix_mem_t){ .offset = 0x00000d00, .name = "14", .area = midi_n, },
 	&(const capmix_mem_t){ .offset = 0x00000e00, .name = "15", .area = midi_n, },
 	&(const capmix_mem_t){ .offset = 0x00000f00, .name = "16", .area = midi_n, },
+	ENDA
 };
 static const capmix_mem_t *part_n[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "rx_channel", .kind = TNibble, .low = 0, .high = 15, },
@@ -193,6 +206,7 @@ static const capmix_mem_t *part_n[] = {
 	&(const capmix_mem_t){ .offset = 0x00000023, .name = "vibrato_depth", .kind = TByte, .low = 0, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x00000024, .name = "vibrato_delay", .kind = TByte, .low = 0, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x00000025, .name = "scale", .area = scale_map, },
+	ENDA
 };
 static const capmix_mem_t *parts[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "1", .area = part_n, },
@@ -211,12 +225,14 @@ static const capmix_mem_t *parts[] = {
 	&(const capmix_mem_t){ .offset = 0x00000d00, .name = "14", .area = part_n, },
 	&(const capmix_mem_t){ .offset = 0x00000e00, .name = "15", .area = part_n, },
 	&(const capmix_mem_t){ .offset = 0x00000f00, .name = "16", .area = part_n, },
+	ENDA
 };
 static const capmix_mem_t *zone_n[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "octave_shift", .kind = TByte, .low = 61, .high = 67, },
 	&(const capmix_mem_t){ .offset = 0x00000001, .name = "switch", .kind = TBool, },
 	&(const capmix_mem_t){ .offset = 0x0000000c, .name = "range_lower", .kind = TByte, .low = 0, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x0000000d, .name = "range_upper", .kind = TByte, .low = 0, .high = 127, },
+	ENDA
 };
 static const capmix_mem_t *zones[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "1", .area = zone_n, },
@@ -235,6 +251,7 @@ static const capmix_mem_t *zones[] = {
 	&(const capmix_mem_t){ .offset = 0x00000d00, .name = "14", .area = zone_n, },
 	&(const capmix_mem_t){ .offset = 0x00000e00, .name = "15", .area = zone_n, },
 	&(const capmix_mem_t){ .offset = 0x00000f00, .name = "16", .area = zone_n, },
+	ENDA
 };
 static const capmix_mem_t *matrix_control[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "source", .kind = TEnum, .values = matrix_control_source_values, },
@@ -246,38 +263,45 @@ static const capmix_mem_t *matrix_control[] = {
 	&(const capmix_mem_t){ .offset = 0x00000006, .name = "sens_3", .kind = TByte, .low = 1, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x00000007, .name = "destination_4", .kind = TEnum, .values = matrix_control_dest_values, },
 	&(const capmix_mem_t){ .offset = 0x00000008, .name = "sens_4", .kind = TByte, .low = 1, .high = 127, },
+	ENDA
 };
 static const capmix_mem_t *keyboard_ranges[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "range_lower", .kind = TByte, .low = 0, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x00000001, .name = "range_upper", .kind = TByte, .low = 0, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x00000002, .name = "fade_lower", .kind = TByte, .low = 0, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x00000003, .name = "fade_upper", .kind = TByte, .low = 0, .high = 127, },
+	ENDA
 };
 static const capmix_mem_t *velocity_ranges[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "range_lower", .kind = TByte, .low = 1, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x00000001, .name = "range_upper", .kind = TByte, .low = 1, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x00000002, .name = "fade_lower", .kind = TByte, .low = 0, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x00000003, .name = "fade_upper", .kind = TByte, .low = 0, .high = 127, },
+	ENDA
 };
 static const capmix_mem_t *tmt_n[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "tone_switch", .kind = TBool, },
 	&(const capmix_mem_t){ .offset = 0x00000001, .name = "keyboard", .area = keyboard_ranges, },
 	&(const capmix_mem_t){ .offset = 0x00000005, .name = "velocity", .area = velocity_ranges, },
+	ENDA
 };
 static const capmix_mem_t *tmt[] = {
 	&(const capmix_mem_t){ .name = "1-2", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x00000000, .name = "structure_type", .kind = TByte, .low = 0, .high = 9, },
 		&(const capmix_mem_t){ .offset = 0x00000001, .name = "booster", .kind = TEnum, .values = booster_values, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "3-4", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x00000002, .name = "structure_type", .kind = TByte, .low = 0, .high = 9, },
 		&(const capmix_mem_t){ .offset = 0x00000003, .name = "booster", .kind = TEnum, .values = booster_values, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .offset = 0x00000004, .name = "velocity_control", .kind = TEnum, .values = (const char *[]){"OFF","ON","RANDOM","CYCLE"}, },
 	&(const capmix_mem_t){ .offset = 0x00000005, .name = "1", .area = tmt_n, },
 	&(const capmix_mem_t){ .offset = 0x0000000e, .name = "2", .area = tmt_n, },
 	&(const capmix_mem_t){ .offset = 0x00000017, .name = "3", .area = tmt_n, },
 	&(const capmix_mem_t){ .offset = 0x00000020, .name = "4", .area = tmt_n, },
+	ENDA
 };
 static const capmix_mem_t *tone_control_switches[] = {
 	&(const capmix_mem_t){ .name = "switch", .area = (const capmix_mem_t *[]){
@@ -285,7 +309,9 @@ static const capmix_mem_t *tone_control_switches[] = {
 		&(const capmix_mem_t){ .offset = 0x00000001, .name = "2", .kind = TEnum, .values = tone_control_switch_values, },
 		&(const capmix_mem_t){ .offset = 0x00000002, .name = "3", .kind = TEnum, .values = tone_control_switch_values, },
 		&(const capmix_mem_t){ .offset = 0x00000003, .name = "4", .kind = TEnum, .values = tone_control_switch_values, },
+		ENDA
 	}},
+	ENDA
 };
 static const capmix_mem_t *patch_tone_n[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "level", .kind = TByte, .low = 0, .high = 127, },
@@ -311,12 +337,14 @@ static const capmix_mem_t *patch_tone_n[] = {
 		&(const capmix_mem_t){ .offset = 0x00000014, .name = "hold_1", .kind = TBool, },
 		&(const capmix_mem_t){ .offset = 0x00000015, .name = "pan_mode", .kind = TEnum, .values = pan_mode_values, },
 		&(const capmix_mem_t){ .offset = 0x00000016, .name = "redamper_switch", .kind = TBool, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "control", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x00000017, .name = "1", .area = tone_control_switches, },
 		&(const capmix_mem_t){ .offset = 0x0000001b, .name = "2", .area = tone_control_switches, },
 		&(const capmix_mem_t){ .offset = 0x0000001f, .name = "3", .area = tone_control_switches, },
 		&(const capmix_mem_t){ .offset = 0x00000023, .name = "4", .area = tone_control_switches, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "wave", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x0000002c, .name = "number_l", .kind = TNibbleQuad, .low = 0, .high = 16384, },
@@ -326,9 +354,11 @@ static const capmix_mem_t *patch_tone_n[] = {
 			&(const capmix_mem_t){ .offset = 0x00000035, .name = "switch", .kind = TBool, },
 			&(const capmix_mem_t){ .offset = 0x00000036, .name = "color", .kind = TByte, .low = 0, .high = 3, },
 			&(const capmix_mem_t){ .offset = 0x00000037, .name = "depth", .kind = TByte, .low = 0, .high = 16, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .offset = 0x00000038, .name = "tempo_sync", .kind = TBool, },
 		&(const capmix_mem_t){ .offset = 0x00000039, .name = "pitch_keyfollow", .kind = TByte, .low = 44, .high = 84, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "pitch_env", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x0000003a, .name = "depth", .kind = TByte, .low = 52, .high = 76, },
@@ -341,6 +371,7 @@ static const capmix_mem_t *patch_tone_n[] = {
 			&(const capmix_mem_t){ .offset = 0x00000040, .name = "2", .kind = TByte, .low = 0, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x00000041, .name = "3", .kind = TByte, .low = 0, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x00000042, .name = "4", .kind = TByte, .low = 0, .high = 127, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .name = "level", .area = (const capmix_mem_t *[]){
 			&(const capmix_mem_t){ .offset = 0x00000043, .name = "0", .kind = TByte, .low = 1, .high = 127, },
@@ -348,7 +379,9 @@ static const capmix_mem_t *patch_tone_n[] = {
 			&(const capmix_mem_t){ .offset = 0x00000045, .name = "2", .kind = TByte, .low = 1, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x00000046, .name = "3", .kind = TByte, .low = 1, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x00000047, .name = "4", .kind = TByte, .low = 1, .high = 127, },
+			ENDA
 		}},
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "tvf", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x00000048, .name = "filter_type", .kind = TEnum, .values = tvf_filter_types, },
@@ -357,10 +390,12 @@ static const capmix_mem_t *patch_tone_n[] = {
 			&(const capmix_mem_t){ .offset = 0x0000004a, .name = "keyfollow", .kind = TByte, .low = 44, .high = 84, },
 			&(const capmix_mem_t){ .offset = 0x0000004b, .name = "velocity_curve", .kind = TNibble, .low = 0, .high = 7, },
 			&(const capmix_mem_t){ .offset = 0x0000004c, .name = "velocity_sens", .kind = TByte, .low = 1, .high = 127, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .name = "resonance", .area = (const capmix_mem_t *[]){
 			&(const capmix_mem_t){ .offset = 0x0000004d, .name = "q", .kind = TByte, .low = 0, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x0000004e, .name = "velocity_sens", .kind = TByte, .low = 1, .high = 127, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .name = "env", .area = (const capmix_mem_t *[]){
 			&(const capmix_mem_t){ .offset = 0x0000004f, .name = "depth", .kind = TByte, .low = 1, .high = 127, },
@@ -374,6 +409,7 @@ static const capmix_mem_t *patch_tone_n[] = {
 				&(const capmix_mem_t){ .offset = 0x00000056, .name = "2", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x00000057, .name = "3", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x00000058, .name = "4", .kind = TByte, .low = 0, .high = 127, },
+				ENDA
 			}},
 			&(const capmix_mem_t){ .name = "level", .area = (const capmix_mem_t *[]){
 				&(const capmix_mem_t){ .offset = 0x00000059, .name = "0", .kind = TByte, .low = 0, .high = 127, },
@@ -381,18 +417,23 @@ static const capmix_mem_t *patch_tone_n[] = {
 				&(const capmix_mem_t){ .offset = 0x0000005b, .name = "2", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x0000005c, .name = "3", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x0000005d, .name = "4", .kind = TByte, .low = 0, .high = 127, },
+				ENDA
 			}},
+			ENDA
 		}},
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "tva", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .name = "bias", .area = (const capmix_mem_t *[]){
 			&(const capmix_mem_t){ .offset = 0x0000005e, .name = "level", .kind = TByte, .low = 54, .high = 74, },
 			&(const capmix_mem_t){ .offset = 0x0000005f, .name = "position", .kind = TByte, .low = 0, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x00000060, .name = "direction", .kind = TEnum, .values = (const char *[]){"LOWER","UPPER","LOWER&UPPER","ALL"}, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .name = "level", .area = (const capmix_mem_t *[]){
 			&(const capmix_mem_t){ .offset = 0x00000061, .name = "velocity_curve", .kind = TByte, .low = 0, .high = 7, },
 			&(const capmix_mem_t){ .offset = 0x00000062, .name = "velocity_sens", .kind = TByte, .low = 1, .high = 127, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .name = "env", .area = (const capmix_mem_t *[]){
 			&(const capmix_mem_t){ .name = "time", .area = (const capmix_mem_t *[]){
@@ -403,13 +444,17 @@ static const capmix_mem_t *patch_tone_n[] = {
 				&(const capmix_mem_t){ .offset = 0x00000067, .name = "2", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x00000068, .name = "3", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x00000069, .name = "4", .kind = TByte, .low = 0, .high = 127, },
+				ENDA
 			}},
 			&(const capmix_mem_t){ .name = "level", .area = (const capmix_mem_t *[]){
 				&(const capmix_mem_t){ .offset = 0x0000006a, .name = "1", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x0000006b, .name = "2", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x0000006c, .name = "3", .kind = TByte, .low = 0, .high = 127, },
+				ENDA
 			}},
+			ENDA
 		}},
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "lfo", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .name = "1", .area = (const capmix_mem_t *[]){
@@ -420,16 +465,19 @@ static const capmix_mem_t *patch_tone_n[] = {
 			&(const capmix_mem_t){ .name = "delay", .area = (const capmix_mem_t *[]){
 				&(const capmix_mem_t){ .offset = 0x00000072, .name = "time", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x00000073, .name = "key_follow", .kind = TByte, .low = 54, .high = 74, },
+				ENDA
 			}},
 			&(const capmix_mem_t){ .name = "fade", .area = (const capmix_mem_t *[]){
 				&(const capmix_mem_t){ .offset = 0x00000074, .name = "mode", .kind = TEnum, .values = lfo_fade_mode_values, },
 				&(const capmix_mem_t){ .offset = 0x00000075, .name = "time", .kind = TByte, .low = 0, .high = 127, },
+				ENDA
 			}},
 			&(const capmix_mem_t){ .offset = 0x00000076, .name = "key_trigger", .kind = TBool, },
 			&(const capmix_mem_t){ .offset = 0x00000077, .name = "pitch_depth", .kind = TByte, .low = 1, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x00000078, .name = "tvf_depth", .kind = TByte, .low = 1, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x00000079, .name = "tva_depth", .kind = TByte, .low = 1, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x0000007a, .name = "pan_depth", .kind = TByte, .low = 1, .high = 127, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .name = "2", .area = (const capmix_mem_t *[]){
 			&(const capmix_mem_t){ .offset = 0x0000007b, .name = "waveform", .kind = TEnum, .values = lfo_waveform_values, },
@@ -439,16 +487,19 @@ static const capmix_mem_t *patch_tone_n[] = {
 			&(const capmix_mem_t){ .name = "delay", .area = (const capmix_mem_t *[]){
 				&(const capmix_mem_t){ .offset = 0x00000100, .name = "time", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x00000101, .name = "key_follow", .kind = TByte, .low = 54, .high = 74, },
+				ENDA
 			}},
 			&(const capmix_mem_t){ .name = "fade", .area = (const capmix_mem_t *[]){
 				&(const capmix_mem_t){ .offset = 0x00000102, .name = "mode", .kind = TEnum, .values = lfo_fade_mode_values, },
 				&(const capmix_mem_t){ .offset = 0x00000103, .name = "time", .kind = TByte, .low = 0, .high = 127, },
+				ENDA
 			}},
 			&(const capmix_mem_t){ .offset = 0x00000104, .name = "key_trigger", .kind = TBool, },
 			&(const capmix_mem_t){ .offset = 0x00000105, .name = "pitch_depth", .kind = TByte, .low = 1, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x00000106, .name = "tvf_depth", .kind = TByte, .low = 1, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x00000107, .name = "tva_depth", .kind = TByte, .low = 1, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x00000108, .name = "pan_depth", .kind = TByte, .low = 1, .high = 127, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .name = "step", .area = (const capmix_mem_t *[]){
 			&(const capmix_mem_t){ .offset = 0x00000109, .name = "type", .kind = TByte, .low = 0, .high = 1, },
@@ -468,12 +519,16 @@ static const capmix_mem_t *patch_tone_n[] = {
 			&(const capmix_mem_t){ .offset = 0x00000117, .name = "14", .kind = TByte, .low = 28, .high = 100, },
 			&(const capmix_mem_t){ .offset = 0x00000118, .name = "15", .kind = TByte, .low = 28, .high = 100, },
 			&(const capmix_mem_t){ .offset = 0x00000119, .name = "16", .kind = TByte, .low = 28, .high = 100, },
+			ENDA
 		}},
+		ENDA
 	}},
+	ENDA
 };
 static const capmix_mem_t *performance_controller[] = {
 	&(const capmix_mem_t){ .offset = 0x00000018, .name = "arp_zone_number", .kind = TByte, .low = 0, .high = 15, },
 	&(const capmix_mem_t){ .offset = 0x00000054, .name = "recommended_tempo", .kind = TNibblePair, .low = 20, .high = 250, },
+	ENDA
 };
 static const capmix_mem_t *performance_pattern[] = {
 	&(const capmix_mem_t){ .name = "common", .area = (const capmix_mem_t *[]){
@@ -489,6 +544,7 @@ static const capmix_mem_t *performance_pattern[] = {
 		&(const capmix_mem_t){ .offset = 0x00000035, .name = "mfx2_channel", .kind = TByte, .low = 0, .high = 16, },
 		&(const capmix_mem_t){ .offset = 0x00000036, .name = "mfx3_channel", .kind = TByte, .low = 0, .high = 16, },
 		&(const capmix_mem_t){ .offset = 0x00000037, .name = "mfx_structure", .kind = TByte, .low = 0, .high = 15, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .offset = 0x00000200, .name = "mfx1", .area = mfx, },
 	&(const capmix_mem_t){ .offset = 0x00000400, .name = "chorus", .area = chorus, },
@@ -499,6 +555,7 @@ static const capmix_mem_t *performance_pattern[] = {
 	&(const capmix_mem_t){ .offset = 0x00002000, .name = "part", .area = parts, },
 	&(const capmix_mem_t){ .offset = 0x00005000, .name = "zone", .area = zones, },
 	&(const capmix_mem_t){ .offset = 0x00006000, .name = "controller", .area = performance_controller, },
+	ENDA
 };
 static const capmix_mem_t *performance_patterns[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "1", .area = performance_pattern, },
@@ -629,10 +686,12 @@ static const capmix_mem_t *performance_patterns[] = {
 	&(const capmix_mem_t){ .offset = 0x007d0000, .name = "126", .area = performance_pattern, },
 	&(const capmix_mem_t){ .offset = 0x007e0000, .name = "127", .area = performance_pattern, },
 	&(const capmix_mem_t){ .offset = 0x007f0000, .name = "128", .area = performance_pattern, },
+	ENDA
 };
 static const capmix_mem_t *pad[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "velocity", .kind = TByte, .low = 1, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x00000002, .name = "pattern_number", .kind = TNibblePair, .low = 0, .high = 255, },
+	ENDA
 };
 static const capmix_mem_t *pads[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "1", .area = pad, },
@@ -643,6 +702,7 @@ static const capmix_mem_t *pads[] = {
 	&(const capmix_mem_t){ .offset = 0x0000000a, .name = "6", .area = pad, },
 	&(const capmix_mem_t){ .offset = 0x0000000c, .name = "7", .area = pad, },
 	&(const capmix_mem_t){ .offset = 0x0000000e, .name = "8", .area = pad, },
+	ENDA
 };
 static const capmix_mem_t *patch[] = {
 	&(const capmix_mem_t){ .name = "common", .area = (const capmix_mem_t *[]){
@@ -665,6 +725,7 @@ static const capmix_mem_t *patch[] = {
 			&(const capmix_mem_t){ .offset = 0x0000001b, .name = "type", .kind = TEnum, .values = (const char *[]){"RATE","TIME"}, },
 			&(const capmix_mem_t){ .offset = 0x0000001c, .name = "start", .kind = TEnum, .values = (const char *[]){"PITCH","NOTE"}, },
 			&(const capmix_mem_t){ .offset = 0x0000001d, .name = "time", .kind = TByte, .low = 0, .high = 127, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .offset = 0x00000022, .name = "cutoff_offset", .kind = TByte, .low = 1, .high = 127, },
 		&(const capmix_mem_t){ .offset = 0x00000023, .name = "resonance_offset", .kind = TByte, .low = 1, .high = 127, },
@@ -680,11 +741,13 @@ static const capmix_mem_t *patch[] = {
 			&(const capmix_mem_t){ .offset = 0x00000034, .name = "2", .area = matrix_control, },
 			&(const capmix_mem_t){ .offset = 0x0000003d, .name = "3", .area = matrix_control, },
 			&(const capmix_mem_t){ .offset = 0x00000046, .name = "4", .area = matrix_control, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .offset = 0x0000004f, .name = "modulation_switch", .kind = TBool, },
 		&(const capmix_mem_t){ .offset = 0x00000200, .name = "mfx", .area = mfx, },
 		&(const capmix_mem_t){ .offset = 0x00000400, .name = "chorus", .area = chorus, },
 		&(const capmix_mem_t){ .offset = 0x00000600, .name = "reverb", .area = reverb, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .offset = 0x00001000, .name = "tmt", .area = tmt, },
 	&(const capmix_mem_t){ .name = "tone", .area = (const capmix_mem_t *[]){
@@ -692,7 +755,9 @@ static const capmix_mem_t *patch[] = {
 		&(const capmix_mem_t){ .offset = 0x00002200, .name = "2", .area = patch_tone_n, },
 		&(const capmix_mem_t){ .offset = 0x00002400, .name = "3", .area = patch_tone_n, },
 		&(const capmix_mem_t){ .offset = 0x00002600, .name = "4", .area = patch_tone_n, },
+		ENDA
 	}},
+	ENDA
 };
 static const capmix_mem_t *performance_patches[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "1", .area = patch, },
@@ -951,6 +1016,7 @@ static const capmix_mem_t *performance_patches[] = {
 	&(const capmix_mem_t){ .offset = 0x00fd0000, .name = "254", .area = patch, },
 	&(const capmix_mem_t){ .offset = 0x00fe0000, .name = "255", .area = patch, },
 	&(const capmix_mem_t){ .offset = 0x00ff0000, .name = "256", .area = patch, },
+	ENDA
 };
 static const capmix_mem_t *drum_wmt_n[] = {
 	&(const capmix_mem_t){ .name = "wave", .area = (const capmix_mem_t *[]){
@@ -962,6 +1028,7 @@ static const capmix_mem_t *drum_wmt_n[] = {
 			&(const capmix_mem_t){ .offset = 0x0000000f, .name = "switch", .kind = TBool, },
 			&(const capmix_mem_t){ .offset = 0x00000010, .name = "color", .kind = TByte, .low = 0, .high = 3, },
 			&(const capmix_mem_t){ .offset = 0x00000011, .name = "depth", .kind = TByte, .low = 0, .high = 16, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .offset = 0x00000012, .name = "tempo_sync", .kind = TBool, },
 		&(const capmix_mem_t){ .offset = 0x00000013, .name = "coarse_tune", .kind = TByte, .low = 16, .high = 112, },
@@ -970,8 +1037,10 @@ static const capmix_mem_t *drum_wmt_n[] = {
 		&(const capmix_mem_t){ .offset = 0x00000016, .name = "random_pan_switch", .kind = TBool, },
 		&(const capmix_mem_t){ .offset = 0x00000017, .name = "alt_pan_switch", .kind = TEnum, .values = (const char *[]){"OFF","ON","REVERSE"}, },
 		&(const capmix_mem_t){ .offset = 0x00000018, .name = "level", .kind = TByte, .low = 0, .high = 127, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .offset = 0x00000019, .name = "velocity", .area = velocity_ranges, },
+	ENDA
 };
 static const capmix_mem_t *drum_tone_n[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "name", .kind = TName, },
@@ -996,6 +1065,7 @@ static const capmix_mem_t *drum_tone_n[] = {
 		&(const capmix_mem_t){ .offset = 0x0000001d, .name = "expression", .kind = TBool, },
 		&(const capmix_mem_t){ .offset = 0x0000001e, .name = "hold_1", .kind = TBool, },
 		&(const capmix_mem_t){ .offset = 0x0000001f, .name = "pan_mode", .kind = TEnum, .values = pan_mode_values, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "wmt", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x00000020, .name = "velocity_control", .kind = TEnum, .values = (const char *[]){"OFF","ON","RANDOM"}, },
@@ -1003,6 +1073,7 @@ static const capmix_mem_t *drum_tone_n[] = {
 		&(const capmix_mem_t){ .offset = 0x0000003e, .name = "2", .area = drum_wmt_n, },
 		&(const capmix_mem_t){ .offset = 0x0000005b, .name = "3", .area = drum_wmt_n, },
 		&(const capmix_mem_t){ .offset = 0x00000078, .name = "4", .area = drum_wmt_n, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "pitch_env", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x00000115, .name = "depth", .kind = TByte, .low = 52, .high = 76, },
@@ -1014,6 +1085,7 @@ static const capmix_mem_t *drum_tone_n[] = {
 			&(const capmix_mem_t){ .offset = 0x0000011a, .name = "2", .kind = TByte, .low = 0, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x0000011b, .name = "3", .kind = TByte, .low = 0, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x0000011c, .name = "4", .kind = TByte, .low = 0, .high = 127, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .name = "level", .area = (const capmix_mem_t *[]){
 			&(const capmix_mem_t){ .offset = 0x0000011d, .name = "0", .kind = TByte, .low = 1, .high = 127, },
@@ -1021,7 +1093,9 @@ static const capmix_mem_t *drum_tone_n[] = {
 			&(const capmix_mem_t){ .offset = 0x0000011f, .name = "2", .kind = TByte, .low = 1, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x00000120, .name = "3", .kind = TByte, .low = 1, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x00000121, .name = "4", .kind = TByte, .low = 1, .high = 127, },
+			ENDA
 		}},
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "tvf", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x00000122, .name = "filter_type", .kind = TEnum, .values = tvf_filter_types, },
@@ -1029,10 +1103,12 @@ static const capmix_mem_t *drum_tone_n[] = {
 			&(const capmix_mem_t){ .offset = 0x00000123, .name = "frequency", .kind = TByte, .low = 0, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x00000124, .name = "velocity_curve", .kind = TNibble, .low = 0, .high = 7, },
 			&(const capmix_mem_t){ .offset = 0x00000125, .name = "velocity_sens", .kind = TByte, .low = 1, .high = 127, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .name = "resonance", .area = (const capmix_mem_t *[]){
 			&(const capmix_mem_t){ .offset = 0x00000126, .name = "q", .kind = TByte, .low = 0, .high = 127, },
 			&(const capmix_mem_t){ .offset = 0x00000127, .name = "velocity_sens", .kind = TByte, .low = 1, .high = 127, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .name = "env", .area = (const capmix_mem_t *[]){
 			&(const capmix_mem_t){ .offset = 0x00000128, .name = "depth", .kind = TByte, .low = 1, .high = 127, },
@@ -1045,6 +1121,7 @@ static const capmix_mem_t *drum_tone_n[] = {
 				&(const capmix_mem_t){ .offset = 0x0000012e, .name = "2", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x0000012f, .name = "3", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x00000130, .name = "4", .kind = TByte, .low = 0, .high = 127, },
+				ENDA
 			}},
 			&(const capmix_mem_t){ .name = "level", .area = (const capmix_mem_t *[]){
 				&(const capmix_mem_t){ .offset = 0x00000131, .name = "0", .kind = TByte, .low = 0, .high = 127, },
@@ -1052,13 +1129,17 @@ static const capmix_mem_t *drum_tone_n[] = {
 				&(const capmix_mem_t){ .offset = 0x00000133, .name = "2", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x00000134, .name = "3", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x00000135, .name = "4", .kind = TByte, .low = 0, .high = 127, },
+				ENDA
 			}},
+			ENDA
 		}},
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "tva", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .name = "level", .area = (const capmix_mem_t *[]){
 			&(const capmix_mem_t){ .offset = 0x00000136, .name = "velocity_curve", .kind = TByte, .low = 0, .high = 7, },
 			&(const capmix_mem_t){ .offset = 0x00000137, .name = "velocity_sens", .kind = TByte, .low = 1, .high = 127, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .name = "env", .area = (const capmix_mem_t *[]){
 			&(const capmix_mem_t){ .name = "time", .area = (const capmix_mem_t *[]){
@@ -1068,22 +1149,28 @@ static const capmix_mem_t *drum_tone_n[] = {
 				&(const capmix_mem_t){ .offset = 0x0000013b, .name = "2", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x0000013c, .name = "3", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x0000013d, .name = "4", .kind = TByte, .low = 0, .high = 127, },
+				ENDA
 			}},
 			&(const capmix_mem_t){ .name = "level", .area = (const capmix_mem_t *[]){
 				&(const capmix_mem_t){ .offset = 0x0000013e, .name = "1", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x0000013f, .name = "2", .kind = TByte, .low = 0, .high = 127, },
 				&(const capmix_mem_t){ .offset = 0x00000140, .name = "3", .kind = TByte, .low = 0, .high = 127, },
+				ENDA
 			}},
+			ENDA
 		}},
+		ENDA
 	}},
 	&(const capmix_mem_t){ .offset = 0x00000141, .name = "one_shot_mode", .kind = TBool, },
 	&(const capmix_mem_t){ .offset = 0x00000142, .name = "relative_level", .kind = TByte, .low = 0, .high = 127, },
+	ENDA
 };
 static const capmix_mem_t *drum_kit[] = {
 	&(const capmix_mem_t){ .name = "common", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x00000000, .name = "name", .kind = TName, },
 		&(const capmix_mem_t){ .offset = 0x0000000c, .name = "level", .kind = TByte, .low = 0, .high = 127, },
 		&(const capmix_mem_t){ .offset = 0x00000011, .name = "output_assign", .kind = TEnum, .values = output_assign_tone_values, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .offset = 0x00000200, .name = "mfx", .area = mfx, },
 	&(const capmix_mem_t){ .offset = 0x00000400, .name = "chorus", .area = chorus, },
@@ -1177,11 +1264,14 @@ static const capmix_mem_t *drum_kit[] = {
 		&(const capmix_mem_t){ .offset = 0x0000aa00, .name = "106", .area = drum_tone_n, },
 		&(const capmix_mem_t){ .offset = 0x0000ac00, .name = "107", .area = drum_tone_n, },
 		&(const capmix_mem_t){ .offset = 0x0000ae00, .name = "108", .area = drum_tone_n, },
+		ENDA
 	}},
+	ENDA
 };
 static const capmix_mem_t *patch_drum[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "patch", .area = patch, },
 	&(const capmix_mem_t){ .offset = 0x00100000, .name = "drum", .area = drum_kit, },
+	ENDA
 };
 static const capmix_mem_t *arpeggio_pattern[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "original_note", .kind = TByte, .low = 0, .high = 127, },
@@ -1218,7 +1308,9 @@ static const capmix_mem_t *arpeggio_pattern[] = {
 		&(const capmix_mem_t){ .offset = 0x0000003a, .name = "30", .kind = TNibblePair, .low = 0, .high = 128, },
 		&(const capmix_mem_t){ .offset = 0x0000003c, .name = "31", .kind = TNibblePair, .low = 0, .high = 128, },
 		&(const capmix_mem_t){ .offset = 0x0000003e, .name = "32", .kind = TNibblePair, .low = 0, .high = 128, },
+		ENDA
 	}},
+	ENDA
 };
 static const capmix_mem_t *arpeggio[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "end_step", .kind = TByte, .low = 1, .high = 32, },
@@ -1240,7 +1332,9 @@ static const capmix_mem_t *arpeggio[] = {
 		&(const capmix_mem_t){ .offset = 0x00000d00, .name = "14", .area = arpeggio_pattern, },
 		&(const capmix_mem_t){ .offset = 0x00000e00, .name = "15", .area = arpeggio_pattern, },
 		&(const capmix_mem_t){ .offset = 0x00000f00, .name = "16", .area = arpeggio_pattern, },
+		ENDA
 	}},
+	ENDA
 };
 static const capmix_mem_t *rhythm_group[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "name", .kind = TName16, },
@@ -1248,6 +1342,7 @@ static const capmix_mem_t *rhythm_group[] = {
 	&(const capmix_mem_t){ .offset = 0x00000011, .name = "bank_lsb", .kind = TByte, .low = 0, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x00000012, .name = "pc", .kind = TByte, .low = 0, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x00000015, .name = "pad", .area = pads, },
+	ENDA
 };
 static const capmix_mem_t *vocal_effect[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "name", .kind = TName, },
@@ -1265,6 +1360,7 @@ static const capmix_mem_t *vocal_effect[] = {
 		&(const capmix_mem_t){ .offset = 0x0000001a, .name = "gender", .kind = TByte, .low = 0, .high = 20, },
 		&(const capmix_mem_t){ .offset = 0x0000001b, .name = "octave", .kind = TByte, .low = 0, .high = 2, },
 		&(const capmix_mem_t){ .offset = 0x0000001c, .name = "balance", .kind = TByte, .low = 0, .high = 100, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "vocoder", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x0000001d, .name = "envelope", .kind = TEnum, .values = (const char *[]){"SHARP","SOFT","LONG"}, },
@@ -1272,8 +1368,10 @@ static const capmix_mem_t *vocal_effect[] = {
 		&(const capmix_mem_t){ .offset = 0x0000001f, .name = "synth_level", .kind = TByte, .low = 0, .high = 127, },
 		&(const capmix_mem_t){ .offset = 0x00000020, .name = "mic_mix", .kind = TByte, .low = 0, .high = 127, },
 		&(const capmix_mem_t){ .offset = 0x00000021, .name = "mic_hpf", .kind = TEnum, .values = (const char *[]){"BYPASS","1000","1250","1600","2000","2500","3150","4000","5000","6300","8000","10000","12500","16000"}, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .offset = 0x00000022, .name = "part_level", .kind = TByte, .low = 0, .high = 127, },
+	ENDA
 };
 static const capmix_mem_t *vocal_effects[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "1", .area = vocal_effect, },
@@ -1296,6 +1394,7 @@ static const capmix_mem_t *vocal_effects[] = {
 	&(const capmix_mem_t){ .offset = 0x00001100, .name = "18", .area = vocal_effect, },
 	&(const capmix_mem_t){ .offset = 0x00001200, .name = "19", .area = vocal_effect, },
 	&(const capmix_mem_t){ .offset = 0x00001300, .name = "20", .area = vocal_effect, },
+	ENDA
 };
 static const capmix_mem_t *setup[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "sound_mode", .kind = TEnum, .values = (const char *[]){"PATCH","PERFORM","GM1","GM2","GS"}, },
@@ -1303,16 +1402,19 @@ static const capmix_mem_t *setup[] = {
 		&(const capmix_mem_t){ .offset = 0x00000001, .name = "bank_msb", .kind = TByte, .low = 0, .high = 127, },
 		&(const capmix_mem_t){ .offset = 0x00000002, .name = "bank_lsb", .kind = TByte, .low = 0, .high = 127, },
 		&(const capmix_mem_t){ .offset = 0x00000003, .name = "pc", .kind = TByte, .low = 0, .high = 127, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "kbd_patch", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x00000004, .name = "bank_msb", .kind = TByte, .low = 0, .high = 127, },
 		&(const capmix_mem_t){ .offset = 0x00000006, .name = "bank_lsb", .kind = TByte, .low = 0, .high = 127, },
 		&(const capmix_mem_t){ .offset = 0x00000007, .name = "pc", .kind = TByte, .low = 0, .high = 127, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "rhy_patch", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x00000007, .name = "bank_msb", .kind = TByte, .low = 0, .high = 127, },
 		&(const capmix_mem_t){ .offset = 0x00000008, .name = "bank_lsb", .kind = TByte, .low = 0, .high = 127, },
 		&(const capmix_mem_t){ .offset = 0x00000009, .name = "pc", .kind = TByte, .low = 0, .high = 127, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .offset = 0x0000000a, .name = "mfx1_switch", .kind = TBool, },
 	&(const capmix_mem_t){ .offset = 0x0000000b, .name = "mfx2_switch", .kind = TBool, },
@@ -1332,6 +1434,7 @@ static const capmix_mem_t *setup[] = {
 		&(const capmix_mem_t){ .offset = 0x0000001e, .name = "hold", .kind = TBool, },
 		&(const capmix_mem_t){ .offset = 0x0000001f, .name = "accent", .kind = TByte, .low = 0, .high = 100, },
 		&(const capmix_mem_t){ .offset = 0x00000020, .name = "velocity", .kind = TByte, .low = 0, .high = 127, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "rhythm", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x00000021, .name = "switch", .kind = TBool, },
@@ -1339,13 +1442,16 @@ static const capmix_mem_t *setup[] = {
 		&(const capmix_mem_t){ .offset = 0x00000026, .name = "group", .kind = TByte, .low = 0, .high = 29, },
 		&(const capmix_mem_t){ .offset = 0x00000027, .name = "accent", .kind = TByte, .low = 0, .high = 100, },
 		&(const capmix_mem_t){ .offset = 0x00000028, .name = "velocity", .kind = TByte, .low = 1, .high = 127, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .offset = 0x00000033, .name = "arpeggio_step", .kind = TByte, .low = 0, .high = 32, },
+	ENDA
 };
 static const capmix_mem_t *system_controller[] = {
 	&(const capmix_mem_t){ .name = "tx", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x00000000, .name = "pc", .kind = TBool, },
 		&(const capmix_mem_t){ .offset = 0x00000001, .name = "bank", .kind = TBool, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .offset = 0x00000002, .name = "velocity", .kind = TByte, .low = 0, .high = 127, },
 	&(const capmix_mem_t){ .offset = 0x00000003, .name = "velocity_curve", .kind = TEnum, .values = (const char *[]){"LIGHT","MEDIUM","HEAVY"}, },
@@ -1354,13 +1460,16 @@ static const capmix_mem_t *system_controller[] = {
 	&(const capmix_mem_t){ .name = "control_pedal", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x00000007, .name = "assign", .kind = TEnum, .values = pedal_assign_values, },
 		&(const capmix_mem_t){ .offset = 0x00000008, .name = "polarity", .kind = TEnum, .values = polarity, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "knob_assign", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x00000010, .name = "1", .kind = TEnum, .values = knob_assign_values, },
 		&(const capmix_mem_t){ .offset = 0x00000011, .name = "2", .kind = TEnum, .values = knob_assign_values, },
 		&(const capmix_mem_t){ .offset = 0x00000012, .name = "3", .kind = TEnum, .values = knob_assign_values, },
 		&(const capmix_mem_t){ .offset = 0x00000013, .name = "4", .kind = TEnum, .values = knob_assign_values, },
+		ENDA
 	}},
+	ENDA
 };
 static const capmix_mem_t *system[] = {
 	&(const capmix_mem_t){ .name = "common", .area = (const capmix_mem_t *[]){
@@ -1368,6 +1477,7 @@ static const capmix_mem_t *system[] = {
 			&(const capmix_mem_t){ .offset = 0x00000000, .name = "tune", .kind = TNibbleQuad, .low = 24, .high = 2024, },
 			&(const capmix_mem_t){ .offset = 0x00000004, .name = "key_shift", .kind = TByte, .low = 40, .high = 88, },
 			&(const capmix_mem_t){ .offset = 0x00000005, .name = "level", .kind = TByte, .low = 0, .high = 127, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .offset = 0x00000006, .name = "scale_switch", .kind = TBool, },
 		&(const capmix_mem_t){ .offset = 0x00000007, .name = "patch_remain", .kind = TBool, },
@@ -1380,17 +1490,22 @@ static const capmix_mem_t *system[] = {
 			&(const capmix_mem_t){ .offset = 0x00000019, .name = "2", .kind = TEnum, .values = control_source_values, },
 			&(const capmix_mem_t){ .offset = 0x0000001a, .name = "3", .kind = TEnum, .values = control_source_values, },
 			&(const capmix_mem_t){ .offset = 0x0000001b, .name = "4", .kind = TEnum, .values = control_source_values, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .name = "rx", .area = (const capmix_mem_t *[]){
 			&(const capmix_mem_t){ .offset = 0x0000001c, .name = "pc", .kind = TBool, },
 			&(const capmix_mem_t){ .offset = 0x0000001d, .name = "bank", .kind = TBool, },
+			ENDA
 		}},
+		ENDA
 	}},
 	&(const capmix_mem_t){ .offset = 0x00004000, .name = "controller", .area = system_controller, },
+	ENDA
 };
 static const capmix_mem_t *patch_parts[] = {
 	&(const capmix_mem_t){ .offset = 0x00000000, .name = "x1", .area = patch_drum, },
 	&(const capmix_mem_t){ .offset = 0x00200000, .name = "x2", .area = patch_drum, },
+	ENDA
 };
 static const capmix_mem_t *juno[] = {
 	&(const capmix_mem_t){ .offset = 0x01000000, .name = "setup", .area = setup, },
@@ -1414,12 +1529,14 @@ static const capmix_mem_t *juno[] = {
 			&(const capmix_mem_t){ .offset = 0x14200000, .name = "14", .area = patch_drum, },
 			&(const capmix_mem_t){ .offset = 0x14400000, .name = "15", .area = patch_drum, },
 			&(const capmix_mem_t){ .offset = 0x14600000, .name = "16", .area = patch_drum, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .offset = 0x1e000000, .name = "rhythm_pattern", .area = arpeggio, },
 		&(const capmix_mem_t){ .offset = 0x1e110000, .name = "arpeggio", .area = arpeggio, },
 		&(const capmix_mem_t){ .offset = 0x1e130000, .name = "rhythm_group", .area = rhythm_group, },
 		&(const capmix_mem_t){ .offset = 0x1e150000, .name = "vocal_effect", .area = vocal_effect, },
 		&(const capmix_mem_t){ .offset = 0x1f000000, .name = "patch_part", .area = patch_parts, },
+		ENDA
 	}},
 	&(const capmix_mem_t){ .name = "user", .area = (const capmix_mem_t *[]){
 		&(const capmix_mem_t){ .offset = 0x20000000, .name = "performance", .area = performance_patterns, },
@@ -1434,7 +1551,12 @@ static const capmix_mem_t *juno[] = {
 			&(const capmix_mem_t){ .offset = 0x00500000, .name = "6", .area = drum_kit, },
 			&(const capmix_mem_t){ .offset = 0x00600000, .name = "7", .area = drum_kit, },
 			&(const capmix_mem_t){ .offset = 0x00700000, .name = "8", .area = drum_kit, },
+			ENDA
 		}},
 		&(const capmix_mem_t){ .offset = 0x60000000, .name = "vocal_effect", .area = vocal_effects, },
+		ENDA
 	}},
+	ENDA
 };
+    const capmix_mem_t **top_area = juno;
+  

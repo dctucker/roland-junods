@@ -104,7 +104,8 @@ macro defEnums(body: untyped): untyped =
         `id`* {.importc: `namestr`, header: "values.c" .}: array[`num`, cstring]
         `id_seq`* = EnumList( name: `namestr`, strings: @`id` )
     for l in letter:
-      result.add l
+      discard
+      #result.add l
 
   "src/values.c".writeFile(c_lines.join("\n"))
 
