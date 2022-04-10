@@ -36,16 +36,17 @@ proc visit(mem: Mem, level: int = 0) =
 #    echo mem.offset, " ", mem.name
 #  #echo mem.area.repr
 
+#when isMainModule:
+#  visit juno_map
+
 when isMainModule:
-  visit juno_map
+  initCache()
+  let nt = newJunoNteract()
+  let input = nt.getUserInput()
+  echo input
 
 #when isMainModule:
-#  initCache()
-#  #visit juno_map
-#  let nt = newJunoNteract()
-#  let input = nt.getUserInput()
-#  echo input
-#  ##for area in nt.areas[^1]:
-#  ##  echo area.name
-#  #traverse(juno_map, 0.JAddr, @[])
+#  for area in nt.areas[^1]:
+#    echo area.name
+#  traverse(juno_map, 0.JAddr, @[])
 
