@@ -1,6 +1,6 @@
-﻿oa ob oc od	name a	name b	name c	name d	name e	name f	name g	|	min	max	desc
+﻿oa ob oc od	name a	name b	name c	name d	name e	name f	name g	|	min	max	desc	
 01 00 00 00	setup											
-      00 00		sound_mode							0	4	patch,perform,gm1,gm2,gs
+      00 00		sound_mode							0	4	patch,perform,gm1,gm2,gs	
       00 01		performance	bank_msb						0	127		
          02			bank_lsb						0	127		
          03			pc						0	127		
@@ -26,7 +26,7 @@
          17		arpeggio	grid						0	8	04_, 08_, 08L, 08H, 08t, 16_, 16L, 16H, 16t	
          18			duration						0	9	30, 40, 50, 60, 70, 80, 90, 100, 120, FUL	
          19			switch						0	1		
-         1a			reserved_6								
+         1a			reserved_6									
          1b			style						0	127		
          1c			motif						0	11	UP/L, UP/H, UP/_, dn/L, dn/H, dn/_, Ud/L, Ud/H, Ud/_, rn/L	
          1d			octave						61	67	-3 .. +3	
@@ -34,9 +34,9 @@
          1f			accent						0	100		
          20			velocity						0	100		
          21		rhythm	switch						0	1		
-         22			reserved_7							
+         22			reserved_7									
          23			style						0	255	1 .. 256; MSB first nibble, LSB second nibble	
-         25			reserved_8							
+         25			reserved_8									
          26			group						0	29		
          27			accent						0	100		
          28			velocity						0	127	REAL, 1 .. 127	
@@ -50,7 +50,7 @@
          05				level								
          06			scale_switch						0	1		
          07			patch_remain						0	1		
-         08			mix_parallel						0	1	___, PARALLEL
+         08			mix_parallel						0	1	___, PARALLEL	
          09			channel						0	16	1 .. 16, OFF	
          0a			kbd_patch_channel						0	15	1 .. 16	
          0b			reserved_1									
@@ -351,7 +351,7 @@
          0c						category			0	127		
          0d						reserved_1						
          0e						level			0	127		
-         0f						pan			0	127	
+         0f						pan			0	127		
          10						priority			0	1	LAST, LOUDEST	
          11						coarse_tune			16	112	-48 .. +48	
          12						fine_tune			14	114	-50 .. +50	
@@ -361,12 +361,12 @@
          16						mono_poly			0	1	MONO, POLY	
          17						legato_switch			0	1		
          18						legato_retrigger			0	1		
-         19						portamento	switch						
-         1a							mode						
-         1b							type						
-         1c							start						
-         1d							time						
-         1e						reserved_2							
+         19						portamento	switch					
+         1a							mode					
+         1b							type					
+         1c							start					
+         1d							time					
+         1e						reserved_2						
          22						cutoff_offset						
          23						resonance_offset						
          24						attack_offset						
@@ -396,103 +396,103 @@
            						chorus_send						
            						reverb_send						
            						output_assign						
-           						control								
-         05							1	source			0	101	OFF, CC01 .. CC31, CC33 .. CC95, BEND, AFT, SYS1 .. SYS4	
-         06							1	sens			1	127	-63 .. +63	
-         07							2	source			0	101	OFF, CC01 .. CC31, CC33 .. CC95, BEND, AFT, SYS1 .. SYS4	
-         08							2	sens			1	127	-63 .. +63	
-         09							3	source			0	101	OFF, CC01 .. CC31, CC33 .. CC95, BEND, AFT, SYS1 .. SYS4	
-         0a							3	sens			1	127	-63 .. +63	
-         0b							4	source			0	101	OFF, CC01 .. CC31, CC33 .. CC95, BEND, AFT, SYS1 .. SYS4	
-         0c							4	sens			1	127	-63 .. +63	
-         0d							assign	1			0	16	OFF, 1 .. 16	
-         0e								2			0	16	OFF, 1 .. 16	
-         0f								3			0	16	OFF, 1 .. 16	
-         10								4			0	16	OFF, 1 .. 16	
-         11						parameter								
-         11							1				12768	52768	-20,000 .. +20,000  four nibbles	
-         15							2				12768	52768	-20,000 .. +20,000	
-         19							3				12768	52768	-20,000 .. +20,000	
-         1d							4				12768	52768	-20,000 .. +20,000	
-         21							5				12768	52768	-20,000 .. +20,000	
-         25							6				12768	52768	-20,000 .. +20,000	
-         29							7				12768	52768	-20,000 .. +20,000	
-         2d							8				12768	52768	-20,000 .. +20,000	
-         31							9				12768	52768	-20,000 .. +20,000	
-         35							10				12768	52768	-20,000 .. +20,000	
-         39							11				12768	52768	-20,000 .. +20,000	
-         3d							12				12768	52768	-20,000 .. +20,000	
-         41							13				12768	52768	-20,000 .. +20,000	
-         45							14				12768	52768	-20,000 .. +20,000	
-         49							15				12768	52768	-20,000 .. +20,000	
-         4d							16				12768	52768	-20,000 .. +20,000	
-         51							17				12768	52768	-20,000 .. +20,000	
-         55							18				12768	52768	-20,000 .. +20,000	
-         59							19				12768	52768	-20,000 .. +20,000	
-         5d							20				12768	52768	-20,000 .. +20,000	
-         61							21				12768	52768	-20,000 .. +20,000	
-         65							22				12768	52768	-20,000 .. +20,000	
-         69							23				12768	52768	-20,000 .. +20,000	
-         6d							24				12768	52768	-20,000 .. +20,000	
-         71							25				12768	52768	-20,000 .. +20,000	
-         75							26				12768	52768	-20,000 .. +20,000	
-         79							27				12768	52768	-20,000 .. +20,000	
-         7d							28				12768	52768	-20,000 .. +20,000	
-      03 11							29				12768	52768	-20,000 .. +20,000	
-         15							30				12768	52768	-20,000 .. +20,000	
-         19							31				12768	52768	-20,000 .. +20,000	
-         1d							32				12768	52768	-20,000 .. +20,000	
+           						control						
+         05							1	source	0	101	OFF, CC01 .. CC31, CC33 .. CC95, BEND, AFT, SYS1 .. SYS4	
+         06							1	sens	1	127	-63 .. +63	
+         07							2	source	0	101	OFF, CC01 .. CC31, CC33 .. CC95, BEND, AFT, SYS1 .. SYS4	
+         08							2	sens	1	127	-63 .. +63	
+         09							3	source	0	101	OFF, CC01 .. CC31, CC33 .. CC95, BEND, AFT, SYS1 .. SYS4	
+         0a							3	sens	1	127	-63 .. +63	
+         0b							4	source	0	101	OFF, CC01 .. CC31, CC33 .. CC95, BEND, AFT, SYS1 .. SYS4	
+         0c							4	sens	1	127	-63 .. +63	
+         0d							assign	1	0	16	OFF, 1 .. 16	
+         0e								2	0	16	OFF, 1 .. 16	
+         0f								3	0	16	OFF, 1 .. 16	
+         10								4	0	16	OFF, 1 .. 16	
+         11						parameter						
+         11							1		12768	52768	-20,000 .. +20,000  four nibbles	
+         15							2		12768	52768	-20,000 .. +20,000	
+         19							3		12768	52768	-20,000 .. +20,000	
+         1d							4		12768	52768	-20,000 .. +20,000	
+         21							5		12768	52768	-20,000 .. +20,000	
+         25							6		12768	52768	-20,000 .. +20,000	
+         29							7		12768	52768	-20,000 .. +20,000	
+         2d							8		12768	52768	-20,000 .. +20,000	
+         31							9		12768	52768	-20,000 .. +20,000	
+         35							10		12768	52768	-20,000 .. +20,000	
+         39							11		12768	52768	-20,000 .. +20,000	
+         3d							12		12768	52768	-20,000 .. +20,000	
+         41							13		12768	52768	-20,000 .. +20,000	
+         45							14		12768	52768	-20,000 .. +20,000	
+         49							15		12768	52768	-20,000 .. +20,000	
+         4d							16		12768	52768	-20,000 .. +20,000	
+         51							17		12768	52768	-20,000 .. +20,000	
+         55							18		12768	52768	-20,000 .. +20,000	
+         59							19		12768	52768	-20,000 .. +20,000	
+         5d							20		12768	52768	-20,000 .. +20,000	
+         61							21		12768	52768	-20,000 .. +20,000	
+         65							22		12768	52768	-20,000 .. +20,000	
+         69							23		12768	52768	-20,000 .. +20,000	
+         6d							24		12768	52768	-20,000 .. +20,000	
+         71							25		12768	52768	-20,000 .. +20,000	
+         75							26		12768	52768	-20,000 .. +20,000	
+         79							27		12768	52768	-20,000 .. +20,000	
+         7d							28		12768	52768	-20,000 .. +20,000	
+      03 11							29		12768	52768	-20,000 .. +20,000	
+         15							30		12768	52768	-20,000 .. +20,000	
+         19							31		12768	52768	-20,000 .. +20,000	
+         1d							32		12768	52768	-20,000 .. +20,000	
       04 00					chorus							
-         00						type								
-         01						level					0	127		
-         02						output_assign					0	3	A, ___, ___, ___	
-         03						output_select					0	2	MAIN, REV, MAIN+REV	
-         04						parameter								
-         04							1				12768	52768	-20,000 .. +20,000	
-         08							2				12768	52768	-20,000 .. +20,000	
-         0c							3				12768	52768	-20,000 .. +20,000	
-         10							4				12768	52768	-20,000 .. +20,000	
-         14							5				12768	52768	-20,000 .. +20,000	
-         18							6				12768	52768	-20,000 .. +20,000	
-         1c							7				12768	52768	-20,000 .. +20,000	
-         20							8				12768	52768	-20,000 .. +20,000	
-         24							9				12768	52768	-20,000 .. +20,000	
-         28							10				12768	52768	-20,000 .. +20,000	
-         2c							11				12768	52768	-20,000 .. +20,000	
-         30							12				12768	52768	-20,000 .. +20,000	
-         34							13				12768	52768	-20,000 .. +20,000	
-         38							14				12768	52768	-20,000 .. +20,000	
-         3c							15				12768	52768	-20,000 .. +20,000	
-         40							16				12768	52768	-20,000 .. +20,000	
-         44							17				12768	52768	-20,000 .. +20,000	
-         48							18				12768	52768	-20,000 .. +20,000	
-         4c							19				12768	52768	-20,000 .. +20,000	
-         50							20				12768	52768	-20,000 .. +20,000	
+         00						type						
+         01						level			0	127		
+         02						output_assign			0	3	A, ___, ___, ___	
+         03						output_select			0	2	MAIN, REV, MAIN+REV	
+         04						parameter						
+         04							1		12768	52768	-20,000 .. +20,000	
+         08							2		12768	52768	-20,000 .. +20,000	
+         0c							3		12768	52768	-20,000 .. +20,000	
+         10							4		12768	52768	-20,000 .. +20,000	
+         14							5		12768	52768	-20,000 .. +20,000	
+         18							6		12768	52768	-20,000 .. +20,000	
+         1c							7		12768	52768	-20,000 .. +20,000	
+         20							8		12768	52768	-20,000 .. +20,000	
+         24							9		12768	52768	-20,000 .. +20,000	
+         28							10		12768	52768	-20,000 .. +20,000	
+         2c							11		12768	52768	-20,000 .. +20,000	
+         30							12		12768	52768	-20,000 .. +20,000	
+         34							13		12768	52768	-20,000 .. +20,000	
+         38							14		12768	52768	-20,000 .. +20,000	
+         3c							15		12768	52768	-20,000 .. +20,000	
+         40							16		12768	52768	-20,000 .. +20,000	
+         44							17		12768	52768	-20,000 .. +20,000	
+         48							18		12768	52768	-20,000 .. +20,000	
+         4c							19		12768	52768	-20,000 .. +20,000	
+         50							20		12768	52768	-20,000 .. +20,000	
       06 00					reverb							
-         00						type					0	5		
-         01						level					0	127		
-         02						output_assign					0	3	A, ___, ___, ___	
-         03						parameter								
-         03							1				12768	52768	-20,000 .. +20,000	
-         07							2				12768	52768	-20,000 .. +20,000	
-         0b							3				12768	52768	-20,000 .. +20,000	
-         0f							4				12768	52768	-20,000 .. +20,000	
-         13							5				12768	52768	-20,000 .. +20,000	
-         17							6				12768	52768	-20,000 .. +20,000	
-         1b							7				12768	52768	-20,000 .. +20,000	
-         1f							8				12768	52768	-20,000 .. +20,000	
-         23							9				12768	52768	-20,000 .. +20,000	
-         27							10				12768	52768	-20,000 .. +20,000	
-         2b							11				12768	52768	-20,000 .. +20,000	
-         2f							12				12768	52768	-20,000 .. +20,000	
-         33							13				12768	52768	-20,000 .. +20,000	
-         37							14				12768	52768	-20,000 .. +20,000	
-         3b							15				12768	52768	-20,000 .. +20,000	
-         3f							16				12768	52768	-20,000 .. +20,000	
-         43							17				12768	52768	-20,000 .. +20,000	
-         47							18				12768	52768	-20,000 .. +20,000	
-         4b							19				12768	52768	-20,000 .. +20,000	
-         4f							20				12768	52768	-20,000 .. +20,000	
+         00						type			0	5		
+         01						level			0	127		
+         02						output_assign			0	3	A, ___, ___, ___	
+         03						parameter						
+         03							1		12768	52768	-20,000 .. +20,000	
+         07							2		12768	52768	-20,000 .. +20,000	
+         0b							3		12768	52768	-20,000 .. +20,000	
+         0f							4		12768	52768	-20,000 .. +20,000	
+         13							5		12768	52768	-20,000 .. +20,000	
+         17							6		12768	52768	-20,000 .. +20,000	
+         1b							7		12768	52768	-20,000 .. +20,000	
+         1f							8		12768	52768	-20,000 .. +20,000	
+         23							9		12768	52768	-20,000 .. +20,000	
+         27							10		12768	52768	-20,000 .. +20,000	
+         2b							11		12768	52768	-20,000 .. +20,000	
+         2f							12		12768	52768	-20,000 .. +20,000	
+         33							13		12768	52768	-20,000 .. +20,000	
+         37							14		12768	52768	-20,000 .. +20,000	
+         3b							15		12768	52768	-20,000 .. +20,000	
+         3f							16		12768	52768	-20,000 .. +20,000	
+         43							17		12768	52768	-20,000 .. +20,000	
+         47							18		12768	52768	-20,000 .. +20,000	
+         4b							19		12768	52768	-20,000 .. +20,000	
+         4f							20		12768	52768	-20,000 .. +20,000	
       10 00					tmt							
          00						1-2	structure_type					
          01							booster					
@@ -500,17 +500,17 @@
          03							booster					
          04						velocity_control						
          05						1	tone_switch					
-         06							keyboard	range_lower					
-         07								range_upper					
-         08								fade_lower					
-         09								fade_upper					
+         06							keyboard	range_lower				
+         07								range_upper				
+         08								fade_lower				
+         09								fade_upper				
          0a							velocity	range_lower				
          0b								range_upper				
          0c								fade_lower				
          0d								fade_upper				
-           						2							SEE: tmt.1
-           						3							SEE: tmt.1
-           						4							SEE: tmt.1
+           						2						SEE: tmt.1
+           						3						SEE: tmt.1
+           						4						SEE: tmt.1
       20 00					tone							
       20 00						1						
          00							level					
@@ -575,9 +575,9 @@
          4f								env	depth			
          50									velocity_curve			
          51									velocity_sens			
-         52									time_1_velocity_sens				
-         53									time_4_velocity_sens				
-         54									time_keyfollow				
+         52									time_1_velocity_sens			
+         53									time_4_velocity_sens			
+         54									time_keyfollow			
          55									time	1		
          56										2		
          57										3		
@@ -587,14 +587,14 @@
          5b										2		
          5c										3		
          5d										4		
-         5e							bias	level
+         5e							bias	level				
          5f								position				
          60								direction				
          61							tva	level	velocity_curve			
          62									velocity_sens			
-         63									time_1_velocity_sens				
-         64									time_4_velocity_sens				
-         65									time_keyfollow				
+         63									time_1_velocity_sens			
+         64									time_4_velocity_sens			
+         65									time_keyfollow			
          66								env	time	1		
          67										2		
          68										3		
@@ -645,13 +645,13 @@
          17									14			
          18									15			
       21 19									16			
-      22 00						2							SEE: tone.1
-      24 00						3							SEE: tone.1
-      26 00						4							SEE: tone.1
+      22 00						2						SEE: tone.1
+      24 00						3						SEE: tone.1
+      26 00						4						SEE: tone.1
    10 00 00				drum								
       00 00					common							
-         00						name						32	127	ASCII char[12]
-         0c						level						0	127
+         00						name				32	127	ASCII char[12]
+         0c						level				0	127	
          0d						reserved						
          11						output_assign						
       02 00					mfx							
@@ -707,99 +707,99 @@
       04 00					chorus							
       06 00					reverb							
       10 00					tone							
-      10 00						21					
-         00							name					32	127	char[12]
-         0c							assign_type								
-         0d							mute_group								
-         0e							level							
-         0f							coarse_tune							
-         10							fine_tune							
-         11							random_pitch_depth							
-         12							pan							
-         13							random_pan_depth							
-         14							alt_pan_depth							
-         15							env_mode							
-         16							dry_send							
-         17							chorus_send							
-         18							reverb_send							
-         19							chorus_send							
-         1a							reverb_send							
-         1b							output_assign							
-         1c							bend_range							
-         1d							rx							
-         1e								expression						
-         1f								hold_1						
-         20								pan_mode						
-         21							wmt	velocity_control					
-         22								1	wave	switch					
-         23										reserved
-         27										number	l			
-         2b											r			
-         2f										gain			
-         30										fxm	switch			
-         31											color		
-         32											depth		
-         33										tempo_sync			
-         34										coarse_tune			
-         35										fine_tune			
-         36										pan			
-         37										random_pan_switch			
-         38										alt_pan_switch			
-         39										level			
-         3a										velocity	range_lower		
-         3b											range_upper		
-         3c											fade_lower		
-         3d											fade_upper		
-         3e								2								SEE: wmt.1
-         5b								3								SEE: wmt.1
-         78								4								SEE: wmt.1
-      11 15							pitch_env	depth						
-         16								velocity_sens						
-         17								time_1	velocity_sens				
-         18								time_4	velocity_sens				
-         19								time	1					
-         1a									2					
-         1b									3					
-         1c									4					
-         1d								level	0					
-         1e									1					
-         1f									2					
-         20									3					
-         21									4					
-         22							tvf	filter_type						
-         23								cutoff	frequency					
-         24									velocity_curve					
-         25									velocity_sens					
-         26								resonance						
-         27								resonance	velocity_sens					
-         28								env	depth					
-         29									velocity_curve_type					
-         2a									velocity_sens					
-         2b									time_1	velocity_sens				
-         2c									time_4	velocity_sens				
-         2d									time	1				
-         2e										2				
-         2f										3				
-         30										4				
-         31									level	0				
-         32										1				
-         33										2				
-         34										3				
-         35										4				
-         36							tva	level	velocity_curve					
-         37									velocity_sens					
-         38								env	time_1				
-         39									time_4					
-         3a									time	1				
-         3b										2				
-         3c										3				
-         3d										4				
-         3e									level	1				
-         3f										2				
-         40										3				
-         41							one_shot_mode								
-      11 42							relative_level								
-           															
+      10 00						21						
+         00							name			32	127	char[12]
+         0c							assign_type					
+         0d							mute_group					
+         0e							level					
+         0f							coarse_tune					
+         10							fine_tune					
+         11							random_pitch_depth					
+         12							pan					
+         13							random_pan_depth					
+         14							alt_pan_depth					
+         15							env_mode					
+         16							dry_send					
+         17							chorus_send					
+         18							reverb_send					
+         19							chorus_send					
+         1a							reverb_send					
+         1b							output_assign					
+         1c							bend_range					
+         1d							rx					
+         1e								expression				
+         1f								hold_1				
+         20								pan_mode				
+         21							wmt	velocity_control				
+         22								1	wave	switch		
+         23										reserved		
+         27										number	l	
+         2b											r	
+         2f										gain		
+         30										fxm	switch	
+         31											color	
+         32											depth	
+         33										tempo_sync		
+         34										coarse_tune		
+         35										fine_tune		
+         36										pan		
+         37										random_pan_switch		
+         38										alt_pan_switch		
+         39										level		
+         3a										velocity	range_lower	
+         3b											range_upper	
+         3c											fade_lower	
+         3d											fade_upper	
+         3e								2				SEE: wmt.1
+         5b								3				SEE: wmt.1
+         78								4				SEE: wmt.1
+      11 15							pitch_env	depth				
+         16								velocity_sens				
+         17								time_1	velocity_sens			
+         18								time_4	velocity_sens			
+         19								time	1			
+         1a									2			
+         1b									3			
+         1c									4			
+         1d								level	0			
+         1e									1			
+         1f									2			
+         20									3			
+         21									4			
+         22							tvf	filter_type				
+         23								cutoff	frequency			
+         24									velocity_curve			
+         25									velocity_sens			
+         26								resonance				
+         27								resonance	velocity_sens			
+         28								env	depth			
+         29									velocity_curve_type			
+         2a									velocity_sens			
+         2b									time_1	velocity_sens		
+         2c									time_4	velocity_sens		
+         2d									time	1		
+         2e										2		
+         2f										3		
+         30										4		
+         31									level	0		
+         32										1		
+         33										2		
+         34										3		
+         35										4		
+         36							tva	level	velocity_curve			
+         37									velocity_sens			
+         38								env	time_1			
+         39									time_4			
+         3a									time	1		
+         3b										2		
+         3c										3		
+         3d										4		
+         3e									level	1		
+         3f										2		
+         40										3		
+         41							one_shot_mode					
+      11 42							relative_level					
+           												
       12 00						22						
       14 00						23						
       16 00						24						
@@ -959,7 +959,7 @@
       1f 00				16					SEE: note.1			
 1e 11 00 00		arpeggio										
       00 00			end_step									
-      00 02			name										
+      00 02			name									
       10 00			note									
       10 00				1								
       11 00				2								
@@ -1026,22 +1026,22 @@
            												
 1f 00 00 00		patch_mode	patch_drum	1								
 1f 20 00 00				2								
-20 00 00 00	user	performance	1										
-20 01 00 00			2										
-20 02 00 00			3										
-20 7f 00 00			128										
-21 00 00 00		pattern	1										
-21 01 00 00			2										
-21 02 00 00			3										
-21 7f 00 00			128										
-30 00 00 00		patch	1										
-30 01 00 00			2										
-31 00 00 00			129										
-31 7f 00 00			256										
-40 00 00 00		drum_kit	1										
-40 10 00 00			2										
-40 70 00 00			8										
-60 00 00 00		vocal_effect	1										
-60 00 01 00			2										
-60 00 13 00			20										
+20 00 00 00	user	performance	1									
+20 01 00 00			2									
+20 02 00 00			3									
+20 7f 00 00			128									
+21 00 00 00		pattern	1									
+21 01 00 00			2									
+21 02 00 00			3									
+21 7f 00 00			128									
+30 00 00 00		patch	1									
+30 01 00 00			2									
+31 00 00 00			129									
+31 7f 00 00			256									
+40 00 00 00		drum_kit	1									
+40 10 00 00			2									
+40 70 00 00			8									
+60 00 00 00		vocal_effect	1									
+60 00 01 00			2									
+60 00 13 00			20									
            												
